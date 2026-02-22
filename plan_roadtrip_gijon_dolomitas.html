@@ -1,0 +1,1109 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Roadtrip Ciclista: Gijón → Dolomitas → Stelvio (5–11 julio)</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <meta name="description" content="Plan de 7 días en hotel para ciclismo de puertos míticos: Arabba (Dolomitas) + Bormio (Stelvio), con opciones potente/controlada y hoteles con spa y parking." />
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#101a2f;
+      --muted:#9fb0d0;
+      --text:#eef2ff;
+      --accent:#7dd3fc;
+      --accent2:#a78bfa;
+      --ok:#34d399;
+      --warn:#fbbf24;
+      --bad:#fb7185;
+      --border: rgba(255,255,255,.10);
+      --shadow: 0 12px 40px rgba(0,0,0,.35);
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: var(--sans);
+      color: var(--text);
+      background:
+        radial-gradient(1200px 800px at 15% -10%, rgba(125,211,252,.22), transparent 55%),
+        radial-gradient(900px 700px at 90% 10%, rgba(167,139,250,.18), transparent 55%),
+        radial-gradient(900px 700px at 50% 120%, rgba(52,211,153,.10), transparent 60%),
+        var(--bg);
+      line-height: 1.55;
+    }
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    .wrap{max-width:1100px; margin:0 auto; padding:28px 18px 90px}
+
+    header{
+      padding: 18px 0 10px;
+      display:flex;
+      gap:18px;
+      align-items:flex-start;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      max-width: 820px;
+    }
+    .title h1{margin:0; font-size: clamp(26px, 3.1vw, 40px); letter-spacing:.2px}
+    .subtitle{color:var(--muted); font-size: 15px}
+
+    .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px}
+    .chip{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      padding:6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .chip strong{color:var(--text); font-weight:600}
+
+    .toolbar{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .btn{
+      appearance:none;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      box-shadow: none;
+      font-weight:600;
+      font-size: 13px;
+    }
+    .btn:hover{background: rgba(255,255,255,.09)}
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.3fr .7fr;
+      gap:16px;
+      margin-top: 14px;
+    }
+    @media (max-width: 930px){
+      .grid{grid-template-columns: 1fr;}
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding: 14px 16px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      border-bottom:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+    }
+    .card .hd h2{margin:0; font-size: 16px}
+    .card .bd{padding: 14px 16px}
+
+    .kpis{display:grid; grid-template-columns: repeat(3, 1fr); gap:10px}
+    @media (max-width: 520px){
+      .kpis{grid-template-columns:1fr;}
+    }
+    .kpi{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .kpi .label{color:var(--muted); font-size:12px}
+    .kpi .val{font-size:18px; font-weight:800; margin-top:4px}
+    .kpi .hint{color:var(--muted); font-size:12px; margin-top:6px}
+
+    .notice{
+      border:1px solid rgba(125,211,252,.35);
+      background: rgba(125,211,252,.06);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+    .notice b{color: var(--accent)}
+
+    .itinerary{
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+
+    details.day{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius: 16px;
+      overflow:hidden;
+    }
+    details.day summary{
+      list-style:none;
+      cursor:pointer;
+      padding: 14px 14px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      justify-content:space-between;
+    }
+    details.day summary::-webkit-details-marker{display:none}
+
+    .dayLeft{display:flex; gap:12px; align-items:flex-start}
+    .badge{
+      min-width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+    }
+    .dayMeta{display:flex; flex-direction:column; gap:4px}
+    .dayMeta .dtitle{font-weight:800}
+    .dayMeta .dsub{color:var(--muted); font-size: 12px}
+    .pills{display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end}
+    .pill{
+      font-size: 11px;
+      padding: 5px 9px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      color: var(--muted);
+      background: rgba(255,255,255,.03);
+      white-space:nowrap;
+    }
+    .pill.ok{border-color: rgba(52,211,153,.35); color: rgba(167,243,208,.95); background: rgba(52,211,153,.06)}
+    .pill.warn{border-color: rgba(251,191,36,.35); color: rgba(253,230,138,.95); background: rgba(251,191,36,.06)}
+    .pill.bad{border-color: rgba(251,113,133,.35); color: rgba(254,205,211,.95); background: rgba(251,113,133,.06)}
+
+    .dayBody{padding: 0 14px 14px; border-top:1px solid var(--border)}
+
+    .twocol{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top: 12px;
+    }
+    @media (max-width: 760px){
+      .twocol{grid-template-columns: 1fr;}
+    }
+    .opt{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .opt h4{margin:0 0 8px; font-size: 13px}
+    .opt .line{display:flex; gap:10px; flex-wrap:wrap; color: var(--muted); font-size: 12px}
+    .opt ul{margin:10px 0 0 18px; color: var(--text)}
+    .muted{color:var(--muted)}
+    .mono{font-family: var(--mono)}
+
+    table{
+      width:100%;
+      border-collapse: separate;
+      border-spacing:0;
+      overflow:hidden;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      margin-top: 10px;
+    }
+    th,td{padding:10px 10px; border-bottom:1px solid var(--border); font-size: 13px}
+    th{color: var(--muted); text-align:left; background: rgba(255,255,255,.03)}
+    tr:last-child td{border-bottom:0}
+
+    .footer{
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .sectionTitle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin: 18px 0 10px;
+    }
+    .sectionTitle h3{margin:0; font-size: 14px}
+
+    .hotels{display:grid; grid-template-columns: 1fr; gap:10px}
+    .hotel{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius: 14px;
+      padding: 12px;
+      display:flex;
+      gap:10px;
+      justify-content:space-between;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+    .hotel .name{font-weight:900}
+    .hotel .meta{color:var(--muted); font-size: 12px; margin-top:4px}
+    .hotel .tags{display:flex; gap:6px; flex-wrap:wrap}
+    .tag{font-size: 11px; padding:5px 8px; border:1px solid var(--border); border-radius: 999px; color: var(--muted)}
+
+    .rightStack{display:flex; flex-direction:column; gap:16px}
+
+    /* Map */
+    #map{height: 520px; width: 100%; border-radius: 16px; border:1px solid var(--border)}
+    .legend{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+    .legendItem{display:flex; align-items:center; gap:8px; font-size:12px; color: var(--muted)}
+    .swatch{width:28px; height:10px; border-radius:999px; border:1px solid var(--border)}
+    .swatch.bike{background: rgba(56,189,248,.45)}
+    .swatch.car{background: rgba(251,191,36,.45)}
+
+    /* Distinción de bloques en coche */
+    .pill.car{border-color: rgba(251,191,36,.35); color: rgba(253,230,138,.95); background: rgba(251,191,36,.06)}
+    .carBlock{
+      border:2px solid rgba(251,191,36,.55);
+      background: rgba(251,191,36,.14);
+      border-radius: 14px;
+      padding: 12px;
+      margin-top: 12px;
+      box-shadow: 0 10px 30px rgba(251,191,36,.08);
+    }
+    .carBlock b{color: rgba(253,230,138,.95)}
+
+    /* Route controls */
+    .routeControls{display:flex; gap:8px; flex-wrap:wrap; margin: 8px 0 0}
+    .routeBtn{font-size:12px; padding:8px 10px; border-radius: 12px; border:1px solid var(--border); background: rgba(255,255,255,.04); color: var(--text); cursor:pointer}
+    .routeBtn:hover{background: rgba(255,255,255,.07)}
+    .routeBtn.active{border-color: rgba(125,211,252,.45); background: rgba(125,211,252,.08)}
+
+    /* Timeline layout */
+    .timeline{
+      position: relative;
+      margin-top: 22px;
+      padding-left: 54px;
+    }
+    .timeline:before{
+      content:"";
+      position:absolute;
+      left:24px;
+      top:0;
+      bottom:0;
+      width:4px;
+      background: linear-gradient(to bottom, rgba(56,189,248,.9), rgba(251,191,36,.9));
+      border-radius:4px;
+      opacity:.55;
+    }
+
+    /* Day header marker */
+    details.day{position:relative}
+    details.day summary{align-items:center}
+    details.day summary:before{
+      content:"";
+      position:absolute;
+      left:-38px;
+      top: 22px;
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background: rgba(125,211,252,.95);
+      box-shadow: 0 0 0 4px rgba(11,18,32,1);
+      border:1px solid rgba(255,255,255,.18);
+    }
+
+    /* Schedule blocks (hour-by-hour) */
+    .schedule{display:flex; flex-direction:column; gap:10px; margin-top:12px}
+    .slot{
+      position:relative;
+      padding: 12px 12px 12px 14px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+    }
+    .slot:before{
+      content:"";
+      position:absolute;
+      left:-30px;
+      top: 16px;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background: rgba(148,163,184,.9);
+      box-shadow: 0 0 0 4px rgba(11,18,32,1);
+    }
+    .slot .t{font-family: var(--mono); font-size:12px; color: rgba(226,232,240,.85)}
+    .slot .a{margin-top:4px; font-weight:800}
+    .slot .d{margin-top:4px; color: var(--muted); font-size:12px}
+
+    .slot.bike{border-color: rgba(56,189,248,.35); background: rgba(56,189,248,.07)}
+    .slot.bike:before{background: rgba(56,189,248,.95)}
+
+    .slot.car{border-color: rgba(251,191,36,.45); background: rgba(251,191,36,.14)}
+    .slot.car:before{background: rgba(251,191,36,.95)}
+
+    .slot.rest{border-color: rgba(52,211,153,.35); background: rgba(52,211,153,.06)}
+    .slot.rest:before{background: rgba(52,211,153,.95)}
+
+    .slot .miniPills{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px}
+    .miniPills .pill{font-size:10.5px; padding:4px 8px}
+
+    /* Base headers */
+    .baseHdr{
+      margin: 22px 0 8px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.02);
+    }
+    .baseHdr .h{font-weight:900; font-size:14px}
+    .baseHdr .s{color: var(--muted); font-size:12px; margin-top:6px}
+    .baseHdr.arabba{border-color: rgba(56,189,248,.35); background: linear-gradient(90deg, rgba(56,189,248,.14), rgba(255,255,255,.02))}
+    .baseHdr.bormio{border-color: rgba(251,191,36,.45); background: linear-gradient(90deg, rgba(251,191,36,.16), rgba(255,255,255,.02))}
+
+    /* --- Enhanced timeline (hour-by-hour) overrides --- */
+    .timeline{margin-top:22px; padding-left:54px}
+    .timeline:before{left:24px; opacity:.55}
+
+    details.day{position:relative}
+    details.day summary{align-items:center}
+    details.day summary:before{
+      content:"";
+      position:absolute;
+      left:-38px;
+      top: 22px;
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background: rgba(125,211,252,.95);
+      box-shadow: 0 0 0 4px rgba(11,18,32,1);
+      border:1px solid rgba(255,255,255,.18);
+    }
+
+    .schedule{display:flex; flex-direction:column; gap:10px; margin-top:12px}
+    .slot{
+      position:relative;
+      padding: 12px 12px 12px 14px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+    }
+    .slot:before{
+      content:"";
+      position:absolute;
+      left:-30px;
+      top: 16px;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background: rgba(148,163,184,.9);
+      box-shadow: 0 0 0 4px rgba(11,18,32,1);
+    }
+    .slot .t{font-family: var(--mono); font-size:12px; color: rgba(226,232,240,.85)}
+    .slot .a{margin-top:4px; font-weight:900}
+    .slot .d{margin-top:4px; color: var(--muted); font-size:12px}
+
+    .slot.bike{border-color: rgba(56,189,248,.35); background: rgba(56,189,248,.07)}
+    .slot.bike:before{background: rgba(56,189,248,.95)}
+
+    .slot.car{border-color: rgba(251,191,36,.45); background: rgba(251,191,36,.14)}
+    .slot.car:before{background: rgba(251,191,36,.95)}
+
+    .slot.rest{border-color: rgba(52,211,153,.35); background: rgba(52,211,153,.06)}
+    .slot.rest:before{background: rgba(52,211,153,.95)}
+
+    .slot .miniPills{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px}
+    .miniPills .pill{font-size:10.5px; padding:4px 8px}
+
+    .baseHdr{
+      margin: 22px 0 8px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.02);
+    }
+    .baseHdr .h{font-weight:900; font-size:14px}
+    .baseHdr .s{color: var(--muted); font-size:12px; margin-top:6px}
+    .baseHdr.arabba{border-color: rgba(56,189,248,.35); background: linear-gradient(90deg, rgba(56,189,248,.14), rgba(255,255,255,.02))}
+    .baseHdr.bormio{border-color: rgba(251,191,36,.45); background: linear-gradient(90deg, rgba(251,191,36,.16), rgba(255,255,255,.02))}
+
+  </style>
+</head>
+<body>
+  <div class="wrap" id="top">
+    <header>
+      <div class="title">
+        <h1>Roadtrip ciclista en hotel: Gijón → Dolomitas → Stelvio</h1>
+        <div class="subtitle">Semana objetivo: Domingo 5 julio – Sábado 11 julio (6 noches totales)
+        <div class="chips">
+          <div class="chip"><strong>Ventana</strong>: primera semana de julio</div>
+          <div class="chip"><strong>Regla</strong>: puertos grandes antes de las 8:00</div>
+          <div class="chip"><strong>Meteo</strong>: evitar tardes 14:00–18:00</div>
+          <div class="chip"><strong>Bonus</strong>: Mortirolo opcional</div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="expandAll">Abrir todo</button>
+        <button class="btn" id="collapseAll">Cerrar todo</button>
+        <button class="btn" id="print">Imprimir / PDF</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <div class="hd">
+          <h2>Itinerario día a día (con opciones)</h2>
+          <div class="muted">Elige cada mañana según piernas</div>
+        </div>
+        <div class="bd">
+          <div class="itinerary timeline">
+
+            <div class="baseHdr arabba">
+              <div class="h">🏔 Base 1: ARABBA · 2 noches (Dom 5 & Lun 6)</div>
+              <div class="s">Dolomitas con margen meteo: Sella Ronda + Giau antes del traslado.</div>
+            </div>
+
+            <!-- D1 -->
+            <details class="day" open>
+              <summary>
+                <div class="dayLeft">
+                  <div class="badge">D1</div>
+                  <div class="dayMeta">
+                    <div class="dtitle">Dom 5 Jul — Viaje a Arabba</div>
+                    <div class="dsub">Noche 1 Arabba</div>
+                  </div>
+                </div>
+                <div class="pills">
+                  <span class="pill car">🚗 11–12 h</span>
+                  <span class="pill ok">Salida 5:00–6:00</span>
+                </div>
+              </summary>
+              <div class="dayBody">
+                <div class="schedule">
+                  <div class="slot car">
+                    <div class="t">05:00–06:00</div>
+                    <div class="a">Salida desde Gijón</div>
+                    <div class="d">Paradas cortas cada 2–2,5 h + 1 larga para comer.</div>
+                  </div>
+                  <div class="slot car">
+                    <div class="t">Durante el día</div>
+                    <div class="a">Conducción</div>
+                    <div class="d">Ruta larga por Francia/Italia. Prioridad: eficiencia + descanso.</div>
+                  </div>
+                  <div class="slot rest">
+                    <div class="t">18:00–20:00</div>
+                    <div class="a">Llegada · Check-in · Preparación bici</div>
+                    <div class="d">Cena ligera + hidratación + dormir pronto.</div>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <!-- D2 -->
+            <details class="day" open>
+              <summary>
+                <div class="dayLeft">
+                  <div class="badge">D2</div>
+                  <div class="dayMeta">
+                    <div class="dtitle">Lun 6 Jul — Sella Ronda</div>
+                    <div class="dsub">63 km · +2.050 m · Max 2.239 m · Noche 2 Arabba</div>
+                  </div>
+                </div>
+                <div class="pills">
+                  <span class="pill ok">Salida 8:00</span>
+                  <span class="pill">Campolongo · Pordoi · Sella · Gardena</span>
+                </div>
+              </summary>
+              <div class="dayBody">
+                <div class="schedule">
+                  <div class="slot rest">
+                    <div class="t">07:00–07:45</div>
+                    <div class="a">Desayuno</div>
+                    <div class="d">Carbohidrato fácil + algo salado.</div>
+                  </div>
+                  <div class="slot bike">
+                    <div class="t">08:00</div>
+                    <div class="a">Salida bici</div>
+                    <div class="d">Ritmo constante (controlado). Sin picos.</div>
+                    <div class="miniPills"><span class="pill">63 km</span><span class="pill">+2.050 m</span></div>
+                  </div>
+                  <div class="slot bike">
+                    <div class="t">10:30 (aprox.)</div>
+                    <div class="a">Cima Passo Pordoi</div>
+                    <div class="d">Abrigo listo para bajada.</div>
+                  </div>
+                  <div class="slot rest">
+                    <div class="t">12:30–13:30</div>
+                    <div class="a">Fin etapa · Comida</div>
+                    <div class="d">Recuperación: hidratos + proteína.</div>
+                  </div>
+                  <div class="slot rest">
+                    <div class="t">Tarde</div>
+                    <div class="a">Descanso / spa</div>
+                    <div class="d">Preparar traslado y bolsa para Bormio.</div>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <!-- D3 -->
+            <details class="day" open>
+              <summary>
+                <div class="dayLeft">
+                  <div class="badge">D3</div>
+                  <div class="dayMeta">
+                    <div class="dtitle">Mar 7 Jul — Passo Giau + traslado a Bormio</div>
+                    <div class="dsub">85–90 km · +2.300 m · Max 2.236 m · Noche 1 Bormio</div>
+                  </div>
+                </div>
+                <div class="pills">
+                  <span class="pill ok">Salida 7:30</span>
+                  <span class="pill car">🚗 2h30–3 h</span>
+                </div>
+              </summary>
+              <div class="dayBody">
+                <div class="schedule">
+                  <div class="slot rest">
+                    <div class="t">06:45–07:15</div>
+                    <div class="a">Desayuno rápido</div>
+                    <div class="d">Objetivo: coronar antes de 11:00.</div>
+                  </div>
+                  <div class="slot bike">
+                    <div class="t">07:30</div>
+                    <div class="a">Salida bici (Giau)</div>
+                    <div class="d">Potente solo si D2 fue MUY suave: añadir Falzarego/Valparola.</div>
+                    <div class="miniPills"><span class="pill">85–90 km</span><span class="pill">+2.300 m</span><span class="pill warn">potente: 120–130 km / +3.200 m</span></div>
+                  </div>
+                  <div class="slot bike">
+                    <div class="t">10:30–11:00</div>
+                    <div class="a">Cima Passo Giau</div>
+                    <div class="d">Bajada con abrigo (expuesto).</div>
+                  </div>
+                  <div class="slot rest">
+                    <div class="t">12:00–13:30</div>
+                    <div class="a">Fin ruta · Comida</div>
+                    <div class="d">Comer simple. Preparar coche.</div>
+                  </div>
+                  <div class="slot car">
+                    <div class="t">14:30–15:00</div>
+                    <div class="a">Coche Arabba → Bormio</div>
+                    <div class="d">2h30–3 h con tráfico/paradas.</div>
+                  </div>
+                  <div class="slot rest">
+                    <div class="t">17:30–18:30</div>
+                    <div class="a">Llegada Bormio · Check-in</div>
+                    <div class="d">Paseo suave + cena. Dormir pronto.</div>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <div class="baseHdr bormio">
+              <div class="h">🏔 Base 2: BORMIO · 4 noches (Mar 7 → Vie 10)</div>
+              <div class="s">Stelvio por 2 caras + bonus Gavia/Mortirolo con margen de decisión diaria.</div>
+            </div>
+
+            <!-- D4 -->
+            <details class="day" open>
+              <summary>
+                <div class="dayLeft">
+                  <div class="badge">D4</div>
+                  <div class="dayMeta">
+                    <div class="dtitle">Mié 8 Jul — Stelvio (Prato) + Umbrail → Bormio</div>
+                    <div class="dsub">94 km · +2.850 m · Max 2.758 m · Noche 2 Bormio</div>
+                  </div>
+                </div>
+                <div class="pills">
+                  <span class="pill car">🚗 1h30 (mañana)</span>
+                  <span class="pill ok">Salida 7:00 desde Prato</span>
+                  <span class="pill warn">frío en cima</span>
+                </div>
+              </summary>
+              <div class="dayBody">
+                <div class="schedule">
+                  <div class="slot rest"><div class="t">05:30–05:55</div><div class="a">Desayuno + preparación</div><div class="d">Manguitos/chaleco listos.</div></div>
+                  <div class="slot car"><div class="t">06:00</div><div class="a">Coche Bormio → Prato</div><div class="d">Llegar con tiempo para preparar la salida.</div></div>
+                  <div class="slot bike"><div class="t">07:00</div><div class="a">Inicio subida (Prato)</div><div class="d">Comer cada 30–40 min.</div></div>
+                  <div class="slot bike"><div class="t">10:15–11:00</div><div class="a">Cima Stelvio (2.758 m)</div><div class="d">Parada corta. Evitar enfriarse.</div></div>
+                  <div class="slot bike"><div class="t">11:00–13:30</div><div class="a">Descenso + Umbrail → Bormio</div><div class="d">Bajada técnica: abrigo obligatorio.</div></div>
+                  <div class="slot rest"><div class="t">Tarde</div><div class="a">Spa / recuperación</div><div class="d">Cena potente. Dormir bien.</div></div>
+                </div>
+              </div>
+            </details>
+
+            <!-- D5 -->
+            <details class="day" open>
+              <summary>
+                <div class="dayLeft">
+                  <div class="badge">D5</div>
+                  <div class="dayMeta">
+                    <div class="dtitle">Jue 9 Jul — Stelvio desde Bormio (ida/vuelta)</div>
+                    <div class="dsub">42 km · +1.530 m · Max 2.758 m · Noche 3 Bormio</div>
+                  </div>
+                </div>
+                <div class="pills"><span class="pill ok">Salida 8:00</span><span class="pill">más controlado</span></div>
+              </summary>
+              <div class="dayBody">
+                <div class="schedule">
+                  <div class="slot rest"><div class="t">07:15</div><div class="a">Desayuno</div><div class="d">Sin prisas. Día corto.</div></div>
+                  <div class="slot bike"><div class="t">08:00</div><div class="a">Salida (Bormio → Stelvio)</div><div class="d">Ritmo cómodo.</div></div>
+                  <div class="slot bike"><div class="t">10:00–10:45</div><div class="a">Cima Stelvio</div><div class="d">Comer algo y preparar bajada.</div></div>
+                  <div class="slot rest"><div class="t">11:30–12:00</div><div class="a">Hotel · Recuperación</div><div class="d">Comida + spa/siesta corta.</div></div>
+                </div>
+              </div>
+            </details>
+
+            <!-- D6 -->
+            <details class="day" open>
+              <summary>
+                <div class="dayLeft">
+                  <div class="badge">D6</div>
+                  <div class="dayMeta">
+                    <div class="dtitle">Vie 10 Jul — Comodín: Gavia o Mortirolo</div>
+                    <div class="dsub">Noche 4 Bormio · elegir según piernas</div>
+                  </div>
+                </div>
+                <div class="pills"><span class="pill ok">Salida 7:30</span><span class="pill warn">Mortirolo = duro</span></div>
+              </summary>
+              <div class="dayBody">
+                <div class="schedule">
+                  <div class="slot rest"><div class="t">07:00</div><div class="a">Desayuno</div><div class="d">Elegir opción con meteo y piernas.</div></div>
+                  <div class="slot bike"><div class="t">07:30</div><div class="a">Salida bici</div><div class="d">Gavia: 51 km / +1.420 m · Mortirolo (Mazzo): 52 km / +1.350 m (rampas 18%).</div></div>
+                  <div class="slot car"><div class="t">(Solo Mortirolo)</div><div class="a">Coche Bormio → Mazzo (~1h10)</div><div class="d">Salir temprano para no alargar el día.</div></div>
+                  <div class="slot rest"><div class="t">11:00–12:30</div><div class="a">Fin ruta · Comida · Spa</div><div class="d">Tarde libre + preparar vuelta.</div></div>
+                </div>
+              </div>
+            </details>
+
+            <!-- D7 -->
+            <details class="day" open>
+              <summary>
+                <div class="dayLeft">
+                  <div class="badge">D7</div>
+                  <div class="dayMeta">
+                    <div class="dtitle">Sáb 11 Jul — Regreso a Gijón</div>
+                    <div class="dsub">Salida desde Bormio</div>
+                  </div>
+                </div>
+                <div class="pills"><span class="pill car">🚗 día largo</span><span class="pill ok">Salida 6:00–7:00</span></div>
+              </summary>
+              <div class="dayBody">
+                <div class="schedule">
+                  <div class="slot car"><div class="t">06:00–07:00</div><div class="a">Salida en coche (Bormio → Gijón)</div><div class="d">Paradas cortas + 1 larga. Prioridad: seguridad.</div></div>
+                  <div class="slot car"><div class="t">Plan B</div><div class="a">Dividir regreso en Francia</div><div class="d">Albertville o Valence si vais cansados.</div></div>
+                </div>
+              </div>
+            </details>
+
+          </div>
+
+          <div class="footer">*Kilómetros y desnivel son estimaciones realistas (pueden variar por el hotel exacto, desvíos y extras). Para minimizar tormentas: puertos grandes siempre por la mañana.</div>
+        </div>
+      </div>
+
+      <div class="rightStack">
+        <div class="card">
+          <div class="hd">
+            <h2>Resumen rápido</h2>
+            <div class="muted">Objetivo: Stelvio perfecto</div>
+          </div>
+          <div class="bd">
+            <div class="kpis">
+              <div class="kpi">
+                <div class="label">Desnivel (sin Mortirolo)</div>
+                <div class="val">≈ 8.700 m</div>
+                <div class="hint">4 días de puertos</div>
+              </div>
+              <div class="kpi">
+                <div class="label">Cota máxima</div>
+                <div class="val">2.758 m</div>
+                <div class="hint">Stelvio</div>
+              </div>
+              <div class="kpi">
+                <div class="label">Ventana recomendada</div>
+                <div class="val">5–11 Jul</div>
+                <div class="hint">más estable</div>
+              </div>
+            </div>
+            <div class="notice"><b>Meteo típica:</b> mañanas estables; tormentas más probables 14:00–18:00. Diferencia térmica posible: <b>25–28°C</b> en valle y <b>5–10°C</b> en la cima.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="hd">
+            <h2>Cotas máximas (m)</h2>
+            <div class="muted">y bases</div>
+          </div>
+          <div class="bd">
+            <table>
+              <tr><th>Paso / zona</th><th>Altitud</th></tr>
+              <tr><td>Passo dello Stelvio (cima)</td><td><b>2.758 m</b></td></tr>
+              <tr><td>Passo di Gavia</td><td>2.621 m</td></tr>
+              <tr><td>Umbrail Pass</td><td>2.501 m</td></tr>
+              <tr><td>Passo Pordoi (Sella Ronda)</td><td>2.239 m</td></tr>
+              <tr><td>Passo Giau</td><td>2.236 m</td></tr>
+              <tr><td>Passo del Mortirolo</td><td>1.852 m</td></tr>
+              <tr><td class="muted">Base Arabba (hotel)</td><td class="muted">~1.600 m</td></tr>
+              <tr><td class="muted">Base Bormio (hotel)</td><td class="muted">~1.225 m</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="hd">
+            <h2>Mapa de rutas y desplazamientos</h2>
+            <div class="muted">Rutas en bici + tramos en coche</div>
+          </div>
+          <div class="bd">
+            <div class="routeControls" id="routeControls"></div>
+            <div id="map" aria-label="Mapa con rutas del viaje"></div>
+            <div class="legend">
+              <div class="legendItem"><span class="swatch bike"></span>Ruta en bici</div>
+              <div class="legendItem"><span class="swatch car"></span>Desplazamiento en coche</div>
+              <div class="legendItem">*Rutas esquemáticas (waypoints) para visualizar el plan. Para navegación exacta: GPX.</div>
+            </div>
+            <div class="carBlock" style="margin-top:12px">
+              <b>Tramos en coche del plan</b>
+              <ul style="margin:8px 0 0 18px">
+                <li><b>D1</b> Gijón → Arabba (11–12 h)</li>
+                <li><b>D3</b> Arabba → Bormio (≈2h30–3 h)</li>
+                <li><b>D4</b> Bormio → Prato allo Stelvio (1h30) · (regreso en bici vía Umbrail)</li>
+                <li><b>D7</b> Bormio → Gijón (vuelta)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="hd">
+            <h2>Hoteles (parking + spa/piscina)</h2>
+            <div class="muted">sugerencias</div>
+          </div>
+          <div class="bd">
+            <div class="muted">sugerencias</div>
+          </div>
+          <div class="bd">
+            <div class="sectionTitle"><h3>Arabba (2 noches)</h3><span class="muted">Elegir 1</span></div>
+            <div class="hotels">
+              <div class="hotel">
+                <div>
+                  <div class="name">Hotel Alpenrose</div>
+                  <div class="meta">Spa/wellness · Parking · Base premium en Arabba</div>
+                </div>
+                <div class="tags"><span class="tag">spa</span><span class="tag">parking</span><span class="tag">bike-friendly</span></div>
+              </div>
+              <div class="hotel">
+                <div>
+                  <div class="name">Hotel Evaldo</div>
+                  <div class="meta">Wellness/spa · Parking · Muy buena ubicación</div>
+                </div>
+                <div class="tags"><span class="tag">spa</span><span class="tag">parking</span><span class="tag">desayuno top</span></div>
+              </div>
+            </div>
+
+            <div class="sectionTitle"><h3>Bormio (3 noches)</h3><span class="muted">Elegir 1</span></div>
+            <div class="hotels">
+              <div class="hotel">
+                <div>
+                  <div class="name">QC Terme Bagni Nuovi</div>
+                  <div class="meta">Balneario termal · Piscinas · Parking · Recuperación total</div>
+                </div>
+                <div class="tags"><span class="tag">terme</span><span class="tag">piscina</span><span class="tag">parking</span></div>
+              </div>
+              <div class="hotel">
+                <div>
+                  <div class="name">Hotel Bagni Vecchi</div>
+                  <div class="meta">Termas históricas · Spa · Parking (según disponibilidad)</div>
+                </div>
+                <div class="tags"><span class="tag">terme</span><span class="tag">spa</span><span class="tag">experiencia</span></div>
+              </div>
+              <div class="hotel">
+                <div>
+                  <div class="name">Miramonti Park Hotel</div>
+                  <div class="meta">Wellness/piscina · Parking · Alternativa céntrica</div>
+                </div>
+                <div class="tags"><span class="tag">piscina</span><span class="tag">spa</span><span class="tag">parking</span></div>
+              </div>
+            </div>
+
+            <div class="notice"><b>Tip hoteles:</b> confirmad siempre <b>parking</b> (gratis o de pago) y <b>bike room</b> / guardabicis seguro. En julio conviene reservar pronto.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="hd">
+            <h2>Checklist express</h2>
+            <div class="muted">julio alpino</div>
+          </div>
+          <div class="bd">
+            <ul style="margin:0 0 0 18px; padding:0">
+              <li><b>Chaleco cortaviento</b> + <b>manguitos</b> (obligatorio para Stelvio).</li>
+              <li>2 bidones (o bidón grande) + sales.</li>
+              <li>Chubasquero ultraligero si hay meteo dudosa.</li>
+              <li>Luces (túneles/sombra) y efectivo/monedas para paradas.</li>
+              <li>Plan de comida: gel/barrita cada 30–40 min en días largos.</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script>
+    const days = Array.from(document.querySelectorAll('details.day'));
+    const expandAll = document.getElementById('expandAll');
+    const collapseAll = document.getElementById('collapseAll');
+    const printBtn = document.getElementById('print');
+
+    expandAll?.addEventListener('click', () => days.forEach(d => d.open = true));
+    collapseAll?.addEventListener('click', () => days.forEach(d => d.open = false));
+    printBtn?.addEventListener('click', () => window.print());
+
+    // --- Map (Leaflet) ---
+    const mapEl = document.getElementById('map');
+    const controlsEl = document.getElementById('routeControls');
+
+    // Helper to create route buttons
+    function makeBtn(label, onClick){
+      const b = document.createElement('button');
+      b.className = 'routeBtn';
+      b.type = 'button';
+      b.textContent = label;
+      b.addEventListener('click', onClick);
+      controlsEl?.appendChild(b);
+      return b;
+    }
+
+    // Waypoints (aprox.)
+    const P = {
+      arabba: [46.4956, 11.8734],
+      corvara: [46.5501, 11.8716],
+      campolongo: [46.5427, 11.8494],
+      pordoi: [46.4886, 11.8078],
+      sella: [46.5116, 11.7917],
+      gardena: [46.5540, 11.8070],
+      giau: [46.4620, 12.0702],
+      bormio: [46.4689, 10.3731],
+      prato: [46.6179, 10.5946],
+      stelvio: [46.5284, 10.4543],
+      umbrail: [46.5416, 10.4404],
+      mazzodi: [46.3116, 10.2589],
+      mortirolo: [46.2520, 10.2680],
+      gavia: [46.3444, 10.4939],
+      gijon: [43.5453, -5.6619],
+    };
+
+    // Bike routes (schematic) + Car transfers
+    const ROUTES = [
+      {
+        id: 'overview',
+        label: 'Vista general',
+        center: [46.48, 10.95],
+        zoom: 8,
+        bike: [],
+        car: [P.gijon, [43.3, -1.9], [45.2, 5.7], [46.4956, 11.8734], P.bormio],
+        note: 'Panorama del viaje (aprox.)'
+      },
+      {
+        id: 'd2',
+        label: 'D2 Bici: Sella Ronda',
+        center: P.arabba,
+        zoom: 11,
+        bike: [P.arabba, P.campolongo, P.corvara, P.gardena, P.sella, P.pordoi, P.campolongo, P.arabba],
+        car: [],
+      },
+      {
+        id: 'd3',
+        label: 'D3 Bici: Giau',
+        center: [46.48, 11.98],
+        zoom: 10,
+        bike: [P.arabba, [46.4049, 12.0092], P.giau, [46.4530, 12.0170], P.arabba],
+        car: [P.arabba, [46.54, 11.95], [46.64, 11.20], [46.58, 10.65], P.bormio],
+      },
+      {
+        id: 'd4',
+        label: 'D4 Bici: Prato→Stelvio→Umbrail→Bormio',
+        center: [46.54, 10.47],
+        zoom: 10,
+        bike: [P.prato, P.stelvio, P.umbrail, P.bormio],
+        car: [P.bormio, P.prato],
+      },
+      {
+        id: 'd5',
+        label: 'D5 Bici: Stelvio desde Bormio',
+        center: [46.50, 10.42],
+        zoom: 10,
+        bike: [P.bormio, P.stelvio, P.bormio],
+        car: [],
+      },
+      {
+        id: 'd6m',
+        label: 'D6 Bici: Mortirolo (Mazzo)',
+        center: [46.29, 10.30],
+        zoom: 11,
+        bike: [P.mazzodi, P.mortirolo, P.mazzodi],
+        car: [P.bormio, P.mazzodi],
+      },
+      {
+        id: 'd6g',
+        label: 'D6 Bici: Gavia',
+        center: [46.40, 10.44],
+        zoom: 10,
+        bike: [P.bormio, P.gavia, P.bormio],
+        car: [],
+      },
+    ];
+
+    let map, bikeLine, carLine;
+
+    function initMap(){
+      map = L.map('map', {scrollWheelZoom: false});
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(map);
+
+      bikeLine = L.polyline([], {color:'#38bdf8', weight:5, opacity:0.8});
+      carLine  = L.polyline([], {color:'#fbbf24', weight:4, opacity:0.75, dashArray:'8 8'});
+      bikeLine.addTo(map);
+      carLine.addTo(map);
+
+      // Buttons
+      const btns = [];
+      ROUTES.forEach(r => {
+        const b = makeBtn(r.label, () => {
+          btns.forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          setRoute(r);
+        });
+        btns.push(b);
+      });
+
+      // Default route
+      btns[0]?.classList.add('active');
+      setRoute(ROUTES[0]);
+    }
+
+    function setRoute(r){
+      const bike = r.bike || [];
+      const car = r.car || [];
+      bikeLine.setLatLngs(bike);
+      carLine.setLatLngs(car);
+      map.setView(r.center || P.arabba, r.zoom || 10);
+
+      // Fit bounds if we have data
+      const all = [...bike, ...car];
+      if(all.length >= 2){
+        const b = L.latLngBounds(all);
+        map.fitBounds(b.pad(0.18));
+      }
+    }
+
+    if(mapEl){
+      initMap();
+    }
+
+    // --- Quality-of-life: allow clicking the badge to toggle quickly
+    days.forEach(d => {
+      const badge = d.querySelector('.badge');
+      badge?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        d.open = !d.open;
+      });
+    });
+  </script>
+  
+  <div class="wrap">
+    <div class="card" style="margin-top:30px">
+      <div class="hd">
+        <h2>Plan detallado horario (operativo)</h2>
+        <div class="muted">Cronograma completo 5–11 julio</div>
+      </div>
+      <div class="bd">
+
+        <h3>🗓 Domingo 5 julio – D1</h3>
+        <div class="carBlock">
+          <b>🚗 Gijón → Arabba</b>
+          <ul>
+            <li>Salida 5:00–6:00</li>
+            <li>11–12 h reales con paradas</li>
+            <li>Llegada estimada 18:00–20:00</li>
+          </ul>
+        </div>
+
+        <h3>🗓 Lunes 6 julio – D2 (Sella Ronda)</h3>
+        <ul>
+          <li>08:00 salida</li>
+          <li>63 km · +2.050 m</li>
+          <li>Final antes de 13:00</li>
+          <li>Sin coche</li>
+        </ul>
+
+        <h3>🗓 Martes 7 julio – D3 (Giau + traslado)</h3>
+        <ul>
+          <li>07:30 salida bici</li>
+          <li>85–90 km · +2.300 m</li>
+        </ul>
+        <div class="carBlock">
+          <b>🚗 Arabba → Bormio</b>
+          <ul>
+            <li>Salida 14:30–15:00</li>
+            <li>2h30–3 h</li>
+            <li>Llegada 17:30–18:30</li>
+          </ul>
+        </div>
+
+        <h3>🗓 Miércoles 8 julio – D4 (Stelvio Prato)</h3>
+        <div class="carBlock">
+          <b>🚗 Bormio → Prato</b>
+          <ul>
+            <li>Salida 6:00</li>
+            <li>1h30</li>
+          </ul>
+        </div>
+        <ul>
+          <li>07:00 inicio subida</li>
+          <li>94 km · +2.850 m</li>
+          <li>Regreso en bici vía Umbrail</li>
+        </ul>
+
+        <h3>🗓 Jueves 9 julio – D5 (Stelvio Bormio)</h3>
+        <ul>
+          <li>08:00 salida</li>
+          <li>42 km · +1.530 m</li>
+          <li>Sin coche</li>
+        </ul>
+
+        <h3>🗓 Viernes 10 julio – D6 (Comodín)</h3>
+        <ul>
+          <li>Opción Gavia: 51 km · +1.420 m</li>
+          <li>Opción Mortirolo: 52 km · +1.350 m</li>
+        </ul>
+        <div class="carBlock">
+          <b>🚗 Solo si Mortirolo:</b> Bormio → Mazzo (~1h10)
+        </div>
+
+        <h3>🗓 Sábado 11 julio – D7</h3>
+        <div class="carBlock">
+          <b>🚗 Bormio → Gijón</b>
+          <ul>
+            <li>Salida 6:00–7:00</li>
+            <li>Jornada larga</li>
+  
