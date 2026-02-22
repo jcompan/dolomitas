@@ -710,6 +710,45 @@
 
           </div>
 
+          
+          <!-- ================= PRESUPUESTO ================= -->
+          <div style="margin-top:40px; padding:22px; border-radius:18px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.03)">
+            <h2 style="margin-top:0">💶 Estimación económica del viaje (2 personas)</h2>
+            <div style="font-size:13px; opacity:.8; margin-bottom:18px">Cálculo orientativo para 7 días (5–11 julio) viajando en furgoneta desde Gijón y alojándose en hotel con spa/piscina.</div>
+
+            <h3>🚗 Desplazamiento (ida y vuelta)</h3>
+            <ul>
+              <li>Combustible (≈3.600 km totales · consumo medio 8L/100 · diesel 1,60€) → <b>460–500 €</b></li>
+              <li>Peajes Francia + Italia → <b>180–220 €</b></li>
+              <li>Parking adicional (Prato / Mazzo si aplica) → <b>20–40 €</b></li>
+            </ul>
+            <div style="margin-top:8px"><b>Total desplazamiento estimado: 660–760 €</b></div>
+
+            <h3 style="margin-top:26px">🏨 Hoteles (6 noches)</h3>
+            <ul>
+              <li>Arabba (2 noches · hotel 4★ con spa) → 220–260 €/noche → <b>440–520 €</b></li>
+              <li>Bormio (4 noches · hotel 4★ con spa) → 200–240 €/noche → <b>800–960 €</b></li>
+            </ul>
+            <div style="margin-top:8px"><b>Total alojamiento estimado: 1.240–1.480 €</b></div>
+
+            <h3 style="margin-top:26px">🍽️ Comidas</h3>
+            <ul>
+              <li>Comidas / cenas fuera (≈40–50 €/persona/día × 6 días) → <b>480–600 €</b></li>
+              <li>Snacks ciclismo / cafés / extras → <b>120–160 €</b></li>
+            </ul>
+            <div style="margin-top:8px"><b>Total comidas estimado: 600–760 €</b></div>
+
+            <h3 style="margin-top:26px">📊 Resumen global estimado</h3>
+            <div style="font-size:15px; font-weight:800; margin-top:10px">
+              💰 Total aproximado viaje completo (2 personas):
+              <div style="font-size:20px; margin-top:6px">2.500 € – 3.000 €</div>
+            </div>
+
+            <div style="margin-top:18px; font-size:12px; opacity:.75">
+              *No incluye posibles upgrades de hotel, seguro adicional, mantenimiento bici o imprevistos mecánicos.
+            </div>
+          </div>
+
           <div class="footer">*Kilómetros y desnivel son estimaciones realistas (pueden variar por el hotel exacto, desvíos y extras). Para minimizar tormentas: puertos grandes siempre por la mañana.</div>
         </div>
       </div>
@@ -762,29 +801,7 @@
           </div>
         </div>
 
-        <div class="card">
-          <div class="hd">
-            <h2>Mapa de rutas y desplazamientos</h2>
-            <div class="muted">Rutas en bici + tramos en coche</div>
-          </div>
-          <div class="bd">
-            <div class="routeControls" id="routeControls"></div>
-            <div id="map" aria-label="Mapa con rutas del viaje"></div>
-            <div class="legend">
-              <div class="legendItem"><span class="swatch bike"></span>Ruta en bici</div>
-              <div class="legendItem"><span class="swatch car"></span>Desplazamiento en coche</div>
-              <div class="legendItem">*Rutas esquemáticas (waypoints) para visualizar el plan. Para navegación exacta: GPX.</div>
-            </div>
-            <div class="carBlock" style="margin-top:12px">
-              <b>Tramos en coche del plan</b>
-              <ul style="margin:8px 0 0 18px">
-                <li><b>D1</b> Gijón → Arabba (11–12 h)</li>
-                <li><b>D3</b> Arabba → Bormio (≈2h30–3 h)</li>
-                <li><b>D4</b> Bormio → Prato allo Stelvio (1h30) · (regreso en bici vía Umbrail)</li>
-                <li><b>D7</b> Bormio → Gijón (vuelta)</li>
-              </ul>
-            </div>
-          </div>
+        
         </div>
 
         <div class="card">
@@ -934,176 +951,4 @@
         center: [46.48, 11.98],
         zoom: 10,
         bike: [P.arabba, [46.4049, 12.0092], P.giau, [46.4530, 12.0170], P.arabba],
-        car: [P.arabba, [46.54, 11.95], [46.64, 11.20], [46.58, 10.65], P.bormio],
-      },
-      {
-        id: 'd4',
-        label: 'D4 Bici: Prato→Stelvio→Umbrail→Bormio',
-        center: [46.54, 10.47],
-        zoom: 10,
-        bike: [P.prato, P.stelvio, P.umbrail, P.bormio],
-        car: [P.bormio, P.prato],
-      },
-      {
-        id: 'd5',
-        label: 'D5 Bici: Stelvio desde Bormio',
-        center: [46.50, 10.42],
-        zoom: 10,
-        bike: [P.bormio, P.stelvio, P.bormio],
-        car: [],
-      },
-      {
-        id: 'd6m',
-        label: 'D6 Bici: Mortirolo (Mazzo)',
-        center: [46.29, 10.30],
-        zoom: 11,
-        bike: [P.mazzodi, P.mortirolo, P.mazzodi],
-        car: [P.bormio, P.mazzodi],
-      },
-      {
-        id: 'd6g',
-        label: 'D6 Bici: Gavia',
-        center: [46.40, 10.44],
-        zoom: 10,
-        bike: [P.bormio, P.gavia, P.bormio],
-        car: [],
-      },
-    ];
-
-    let map, bikeLine, carLine;
-
-    function initMap(){
-      map = L.map('map', {scrollWheelZoom: false});
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 18,
-        attribution: '&copy; OpenStreetMap'
-      }).addTo(map);
-
-      bikeLine = L.polyline([], {color:'#38bdf8', weight:5, opacity:0.8});
-      carLine  = L.polyline([], {color:'#fbbf24', weight:4, opacity:0.75, dashArray:'8 8'});
-      bikeLine.addTo(map);
-      carLine.addTo(map);
-
-      // Buttons
-      const btns = [];
-      ROUTES.forEach(r => {
-        const b = makeBtn(r.label, () => {
-          btns.forEach(x => x.classList.remove('active'));
-          b.classList.add('active');
-          setRoute(r);
-        });
-        btns.push(b);
-      });
-
-      // Default route
-      btns[0]?.classList.add('active');
-      setRoute(ROUTES[0]);
-    }
-
-    function setRoute(r){
-      const bike = r.bike || [];
-      const car = r.car || [];
-      bikeLine.setLatLngs(bike);
-      carLine.setLatLngs(car);
-      map.setView(r.center || P.arabba, r.zoom || 10);
-
-      // Fit bounds if we have data
-      const all = [...bike, ...car];
-      if(all.length >= 2){
-        const b = L.latLngBounds(all);
-        map.fitBounds(b.pad(0.18));
-      }
-    }
-
-    if(mapEl){
-      initMap();
-    }
-
-    // --- Quality-of-life: allow clicking the badge to toggle quickly
-    days.forEach(d => {
-      const badge = d.querySelector('.badge');
-      badge?.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        d.open = !d.open;
-      });
-    });
-  </script>
-  
-  <div class="wrap">
-    <div class="card" style="margin-top:30px">
-      <div class="hd">
-        <h2>Plan detallado horario (operativo)</h2>
-        <div class="muted">Cronograma completo 5–11 julio</div>
-      </div>
-      <div class="bd">
-
-        <h3>🗓 Domingo 5 julio – D1</h3>
-        <div class="carBlock">
-          <b>🚗 Gijón → Arabba</b>
-          <ul>
-            <li>Salida 5:00–6:00</li>
-            <li>11–12 h reales con paradas</li>
-            <li>Llegada estimada 18:00–20:00</li>
-          </ul>
-        </div>
-
-        <h3>🗓 Lunes 6 julio – D2 (Sella Ronda)</h3>
-        <ul>
-          <li>08:00 salida</li>
-          <li>63 km · +2.050 m</li>
-          <li>Final antes de 13:00</li>
-          <li>Sin coche</li>
-        </ul>
-
-        <h3>🗓 Martes 7 julio – D3 (Giau + traslado)</h3>
-        <ul>
-          <li>07:30 salida bici</li>
-          <li>85–90 km · +2.300 m</li>
-        </ul>
-        <div class="carBlock">
-          <b>🚗 Arabba → Bormio</b>
-          <ul>
-            <li>Salida 14:30–15:00</li>
-            <li>2h30–3 h</li>
-            <li>Llegada 17:30–18:30</li>
-          </ul>
-        </div>
-
-        <h3>🗓 Miércoles 8 julio – D4 (Stelvio Prato)</h3>
-        <div class="carBlock">
-          <b>🚗 Bormio → Prato</b>
-          <ul>
-            <li>Salida 6:00</li>
-            <li>1h30</li>
-          </ul>
-        </div>
-        <ul>
-          <li>07:00 inicio subida</li>
-          <li>94 km · +2.850 m</li>
-          <li>Regreso en bici vía Umbrail</li>
-        </ul>
-
-        <h3>🗓 Jueves 9 julio – D5 (Stelvio Bormio)</h3>
-        <ul>
-          <li>08:00 salida</li>
-          <li>42 km · +1.530 m</li>
-          <li>Sin coche</li>
-        </ul>
-
-        <h3>🗓 Viernes 10 julio – D6 (Comodín)</h3>
-        <ul>
-          <li>Opción Gavia: 51 km · +1.420 m</li>
-          <li>Opción Mortirolo: 52 km · +1.350 m</li>
-        </ul>
-        <div class="carBlock">
-          <b>🚗 Solo si Mortirolo:</b> Bormio → Mazzo (~1h10)
-        </div>
-
-        <h3>🗓 Sábado 11 julio – D7</h3>
-        <div class="carBlock">
-          <b>🚗 Bormio → Gijón</b>
-          <ul>
-            <li>Salida 6:00–7:00</li>
-            <li>Jornada larga</li>
-  
+       
