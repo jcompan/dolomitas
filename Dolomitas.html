@@ -1,0 +1,2229 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Roadtrip Ciclista: Gijón → Dolomitas → Stelvio (5–11 julio)</title>
+  <meta name="description" content="Plan de 7 días en hotel para ciclismo de puertos míticos: Arabba (Dolomitas) + Bormio (Stelvio), con opciones potente/controlada y hoteles con spa y parking." />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <style>
+    :root{
+      --bg:#cfead8;
+      --card:#ffffff;
+      --muted:#4a5c54;
+      --text:#14221a;
+      --accent:#0d9488;
+      --accent2:#6366f1;
+      --ok:#059669;
+      --warn:#d97706;                                                                                                                                                                                                     
+      --bad:#dc2626;
+      --border: rgba(20, 34, 26, .12);
+      --shadow: 0 12px 40px rgba(12, 45, 35, .12);
+      --surface: rgba(255,255,255,.94);
+      --surface-dim: rgba(248,252,249,.92);
+      --ring: #e8f8f3;
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family: var(--sans);
+      color: var(--text);
+      background: linear-gradient(180deg, #8ec9f4 0%, #b9ddf8 28%, #d4efe4 62%, var(--bg) 100%);
+      background-attachment: fixed;
+      line-height: 1.55;
+    }
+    /* Ilustración inferior: montañas verdes, carretera en curvas y bicis de carretera */
+    .bg-scene{
+      position:fixed;
+      left:0;
+      right:0;
+      bottom:0;
+      height:min(52vh, 500px);
+      z-index:-1;
+      pointer-events:none;
+    }
+    .bg-scene svg{
+      width:100%;
+      height:100%;
+      display:block;
+    }
+    @media (max-width: 768px){
+      body{ background-attachment: scroll; }
+      .bg-scene{ height:min(42vh, 380px); }
+    }
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    /* —— Accesibilidad: foco visible en cualquier elemento interactivo —— */
+    a:focus-visible, button:focus-visible, summary:focus-visible{
+      outline: 3px solid #0d9488;
+      outline-offset: 3px;
+      border-radius: 8px;
+    }
+
+    /* —— Skip-link para navegación por teclado —— */
+    .skip-link{
+      position: fixed;
+      top: -100px;
+      left: 12px;
+      padding: 10px 14px;
+      background: #0f766e;
+      color: #fff;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 13px;
+      z-index: 200;
+      transition: top .15s ease;
+      box-shadow: 0 6px 18px rgba(15,118,110,.4);
+    }
+    .skip-link:focus{ top: 12px; outline: 3px solid #fff; outline-offset: 2px; }
+
+    /* —— Barra de progreso de lectura —— */
+    .read-progress{
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      z-index: 100;
+      background: rgba(15,118,110,.15);
+      pointer-events: none;
+    }
+    .read-progress > span{
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #0d9488, #fc4c02);
+      transition: width .12s ease-out;
+    }
+
+    /* —— Botón "volver arriba" flotante —— */
+    .to-top{
+      position: fixed;
+      right: clamp(14px, 3vw, 32px);
+      bottom: clamp(14px, 3vw, 28px);
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.96);
+      color: #0f766e;
+      font-size: 20px;
+      font-weight: 900;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 12px 28px rgba(12,45,35,.18);
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+      z-index: 90;
+    }
+    .to-top.visible{ opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .to-top:hover{ background: #fff; box-shadow: 0 16px 34px rgba(12,45,35,.24); }
+
+    .wrap{max-width:1100px; margin:0 auto; padding:28px 18px 90px}
+
+    /* —— Panel "Viaje en 30 segundos": KPIs visibles desde el inicio —— */
+    .trip-glance{
+      margin: 14px 0 10px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(232,248,243,.78));
+      box-shadow: 0 10px 30px rgba(12,45,35,.1);
+    }
+    .glance-title{
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .glance-title h2{
+      margin: 0;
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: #0f766e;
+    }
+    .glance-title .glance-sub{ font-size: 12px; color: var(--muted); }
+    .glance-kpis{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .glance-kpi{
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.94);
+      text-align: left;
+    }
+    .glance-kpi .lbl{
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .glance-kpi .val{
+      margin-top: 4px;
+      font-size: 18px;
+      font-weight: 900;
+      color: #0f172a;
+      font-family: var(--mono);
+    }
+    .glance-kpi .hint{ margin-top: 2px; font-size: 11px; color: var(--muted); }
+    .glance-kpi.accent .val{ color: #fc4c02; }
+
+    /* Itinerario a ancho completo del viewport */
+    .itinerary-full{
+      width: 100%;
+      padding: 0 clamp(14px, 4vw, 32px);
+      margin-bottom: 28px;
+      box-sizing: border-box;
+    }
+    .itinerary-full .itinerary-card{
+      max-width: none;
+    }
+
+    /* Columna principal + barra lateral (debajo del itinerario) */
+    .grid-secondary{
+      display:grid;
+      grid-template-columns: 1fr minmax(280px, 380px);
+      gap:16px;
+      align-items:start;
+      margin-top: 0;
+    }
+    .column-main{ min-width: 0; }
+    @media (max-width: 930px){
+      .grid-secondary{ grid-template-columns: 1fr; }
+    }
+
+    /* Fichas de ruta dentro de cada día (estilo Strava) */
+    details.route-detail{
+      margin-top: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(20,34,26,.16);
+      background: linear-gradient(180deg, #161b1f, #0f1316);
+      color: #f5f7fa;
+      overflow: hidden;
+      box-shadow: 0 12px 36px rgba(8,16,20,.18);
+    }
+    details.route-detail summary{
+      list-style: none;
+      cursor: pointer;
+      padding: 12px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      align-items: baseline;
+      justify-content: space-between;
+      background: linear-gradient(90deg, rgba(252,76,2,.18), rgba(0,0,0,0));
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    details.route-detail summary::-webkit-details-marker{ display: none; }
+    .route-detail-kicker{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: #fc4c02;
+      color: #fff;
+    }
+    .route-detail-name{
+      flex: 1 1 180px;
+      font-weight: 900;
+      font-size: 14px;
+      color: #ffffff;
+      letter-spacing: .01em;
+    }
+    .route-detail-meta{
+      font-size: 11px;
+      font-weight: 700;
+      color: #a8b3bd;
+      font-family: var(--mono);
+    }
+    .route-detail-body{ padding: 14px; }
+    .route-detail-stats{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 10px;
+      margin: 0 0 14px;
+    }
+    .route-stat{
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+    }
+    .route-stat dt{
+      margin: 0;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: #93a0aa;
+    }
+    .route-stat dd{
+      margin: 4px 0 0;
+      font-size: 16px;
+      font-weight: 900;
+      color: #fff;
+      font-family: var(--mono);
+      letter-spacing: .01em;
+    }
+    .route-stat.accent dd{ color: #fc4c02; }
+    .route-desc{
+      margin: 0 0 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #d6dee5;
+    }
+    .route-map{
+      height: 280px;
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: #0a0d10;
+      z-index: 1;
+    }
+    .route-map .leaflet-control-attribution{
+      background: rgba(0,0,0,.55);
+      color: #b6c1cb;
+    }
+    .route-map .leaflet-control-attribution a{ color: #d8d8d8; }
+    .route-map .leaflet-bar a{
+      background: #14181c;
+      color: #fff;
+      border-bottom-color: rgba(255,255,255,.08);
+    }
+    .route-map .leaflet-bar a:hover{ background: #1c2127; }
+    .route-disclaimer{
+      margin: 10px 0 0;
+      font-size: 11px;
+      color: #8a96a0;
+    }
+    .route-options{ display: flex; flex-direction: column; gap: 12px; }
+
+    /* Botón "Ver en Strava" (CTA) */
+    .route-cta{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 14px;
+    }
+    .route-strava-link{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: #fc4c02;
+      color: #fff;
+      font-weight: 800;
+      font-size: 12.5px;
+      letter-spacing: .01em;
+      text-decoration: none;
+      border: 1px solid #fc4c02;
+      transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+    }
+    .route-strava-link:hover{
+      background: #e34302;
+      color: #fff;
+      text-decoration: none;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(252,76,2,.36);
+    }
+    .route-strava-link svg{ width: 14px; height: 14px; flex: 0 0 14px; }
+    .route-strava-link .ext{
+      opacity: .85;
+      font-weight: 700;
+      font-size: 11px;
+    }
+
+    /* Tooltips de los puertos en el mapa */
+    .leaflet-tooltip.pass-tooltip{
+      background: rgba(15,23,42,.92);
+      color: #fbbf24;
+      border: 1px solid rgba(251,191,36,.55);
+      border-radius: 5px;
+      padding: 2px 7px;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: .02em;
+      box-shadow: 0 4px 10px rgba(0,0,0,.4);
+      white-space: nowrap;
+    }
+    .leaflet-tooltip.pass-tooltip:before{ display: none; }
+
+    header{
+      padding: 18px 0 10px;
+      display:flex;
+      gap:18px;
+      align-items:flex-start;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      max-width: 820px;
+    }
+    .title h1{margin:0; font-size: clamp(26px, 3.1vw, 40px); letter-spacing:.2px}
+    .subtitle{color:var(--muted); font-size: 15px}
+
+    .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px}
+    .chip{
+      border:1px solid var(--border);
+      background: var(--surface);
+      padding:6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .chip strong{color:var(--text); font-weight:600}
+
+    .toolbar{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .btn{
+      appearance:none;
+      border:1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      box-shadow: 0 2px 8px rgba(12,40,30,.06);
+      font-weight:600;
+      font-size: 13px;
+    }
+    .btn:hover{background: #fff; box-shadow: 0 4px 14px rgba(12,40,30,.1)}
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,252,249,.94));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding: 14px 16px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      border-bottom:1px solid var(--border);
+      background: rgba(240,249,244,.85);
+    }
+    .card .hd h2{margin:0; font-size: 16px}
+    .card .bd{padding: 14px 16px}
+
+    .kpis{display:grid; grid-template-columns: repeat(3, 1fr); gap:10px}
+    @media (max-width: 520px){
+      .kpis{grid-template-columns:1fr;}
+    }
+    .kpi{
+      border:1px solid var(--border);
+      background: var(--surface-dim);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .kpi .label{color:var(--muted); font-size:12px}
+    .kpi .val{font-size:18px; font-weight:800; margin-top:4px}
+    .kpi .hint{color:var(--muted); font-size:12px; margin-top:6px}
+
+    .notice{
+      border:1px solid rgba(13,148,136,.35);
+      background: rgba(204,251,241,.55);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+    .notice b{color: var(--accent)}
+
+    .itinerary{
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+
+    details.day{
+      border:1px solid var(--border);
+      background: var(--surface-dim);
+      border-radius: 16px;
+      overflow:hidden;
+    }
+    details.day summary{
+      list-style:none;
+      cursor:pointer;
+      padding: 14px 14px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      justify-content:space-between;
+    }
+    details.day summary::-webkit-details-marker{display:none}
+
+    .dayLeft{display:flex; gap:12px; align-items:flex-start}
+    .badge{
+      min-width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      border:1px solid var(--border);
+      background: var(--surface);
+    }
+    .dayMeta{display:flex; flex-direction:column; gap:4px}
+    .dayMeta .dtitle{font-weight:800}
+    .dayMeta .dsub{color:var(--muted); font-size: 12px}
+    .pills{display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end}
+    .pill{
+      font-size: 11px;
+      padding: 5px 9px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      color: var(--muted);
+      background: rgba(255,255,255,.75);
+      white-space:nowrap;
+    }
+    .pill.ok{border-color: rgba(5,150,105,.35); color: #047857; background: rgba(209,250,229,.85)}
+    .pill.warn{border-color: rgba(217,119,6,.4); color: #b45309; background: rgba(254,243,199,.9)}
+    .pill.bad{border-color: rgba(220,38,38,.35); color: #b91c1c; background: rgba(254,226,226,.85)}
+
+    .dayBody{padding: 0 14px 14px; border-top:1px solid var(--border)}
+
+    .twocol{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top: 12px;
+    }
+    @media (max-width: 760px){
+      .twocol{grid-template-columns: 1fr;}
+    }
+    .opt{
+      border:1px solid var(--border);
+      background: var(--surface-dim);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .opt h4{margin:0 0 8px; font-size: 13px}
+    .opt .line{display:flex; gap:10px; flex-wrap:wrap; color: var(--muted); font-size: 12px}
+    .opt ul{margin:10px 0 0 18px; color: var(--text)}
+    .muted{color:var(--muted)}
+    .mono{font-family: var(--mono)}
+
+    table{
+      width:100%;
+      border-collapse: separate;
+      border-spacing:0;
+      overflow:hidden;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: var(--surface-dim);
+      margin-top: 10px;
+    }
+    th,td{padding:10px 10px; border-bottom:1px solid var(--border); font-size: 13px}
+    th{color: var(--muted); text-align:left; background: rgba(236,253,245,.75)}
+    tr:last-child td{border-bottom:0}
+
+    .footer{
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    /* —— Leyenda de tipos de bloque —— */
+    .type-legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px 18px;
+      align-items:center;
+      margin-bottom: 16px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      border:1px dashed rgba(20,34,26,.18);
+      background: rgba(255,255,255,.72);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .type-legend strong{color:var(--text); font-size:11px; letter-spacing:.02em}
+    .lg{display:inline-flex; align-items:center; gap:8px}
+    .lg i{
+      width:12px; height:12px; border-radius:4px;
+      border:1px solid rgba(20,34,26,.15);
+    }
+    .lg.est i{background: linear-gradient(135deg, rgba(125,211,252,.75), rgba(56,189,248,.35))}
+    .lg.route i{background: linear-gradient(135deg, rgba(52,211,153,.65), rgba(16,185,129,.25))}
+    .lg xfer i{background: linear-gradient(135deg, rgba(251,191,36,.85), rgba(245,158,11,.3))}
+    .lg.bridge i{background: linear-gradient(135deg, rgba(251,191,36,.85), rgba(245,158,11,.4))}
+
+    /* —— Bloques de estancia (contenedor desplegable) —— */
+    details.stay-block{
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      border: 2px solid rgba(20,34,26,.1);
+      background: rgba(255,255,255,.82);
+      box-shadow: 0 10px 36px rgba(12,45,35,.1);
+    }
+    details.stay-block summary{
+      list-style: none;
+      cursor: pointer;
+      padding: 14px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 14px;
+      border-bottom: 1px solid rgba(20,34,26,.08);
+    }
+    details.stay-block summary::-webkit-details-marker{display:none}
+    details.stay-block summary .stay-kicker{
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .45px;
+      text-transform: uppercase;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(20,34,26,.12);
+      background: rgba(255,255,255,.75);
+      color: var(--text);
+    }
+    details.stay-block summary .stay-heading{
+      font-weight: 900;
+      font-size: 15px;
+      letter-spacing: .02em;
+    }
+    details.stay-block summary .stay-sub{
+      flex: 1 1 200px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: right;
+    }
+    details.stay-block.stay-arabba{
+      border-color: rgba(56,189,248,.45);
+      box-shadow: 0 12px 36px rgba(56,189,248,.12);
+    }
+    details.stay-block.stay-arabba summary{
+      background: linear-gradient(90deg, rgba(56,189,248,.28), rgba(255,255,255,.92));
+    }
+    details.stay-block.stay-arabba summary .stay-kicker{
+      border-color: rgba(13,148,136,.35);
+      color: #0f766e;
+      background: rgba(204,251,241,.65);
+    }
+    details.stay-block.stay-bormio{
+      border-color: rgba(251,191,36,.45);
+      box-shadow: 0 12px 36px rgba(251,191,36,.12);
+    }
+    details.stay-block.stay-bormio summary{
+      background: linear-gradient(90deg, rgba(251,191,36,.28), rgba(255,255,255,.92));
+    }
+    details.stay-block.stay-bormio summary .stay-kicker{
+      border-color: rgba(217,119,6,.45);
+      color: #92400e;
+      background: rgba(254,243,199,.85);
+    }
+    .stay-block-body{
+      padding: 14px 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* —— Días: ruta / traslado / mixto —— */
+    details.day{
+      border-width: 1px;
+      border-left-width: 5px;
+    }
+    details.day.day-route{
+      border-left-color: rgba(5,150,105,.85);
+      background: linear-gradient(90deg, rgba(167,243,208,.35), rgba(255,255,255,.92));
+    }
+    details.day.day-route summary .badge{
+      border-color: rgba(5,150,105,.45);
+      background: rgba(209,250,229,.95);
+      color: #065f46;
+    }
+    details.day.day-transfer{
+      border-left-color: rgba(217,119,6,.95);
+      background: linear-gradient(90deg, rgba(254,243,199,.55), rgba(255,255,255,.92));
+    }
+    details.day.day-transfer summary .badge{
+      border-color: rgba(217,119,6,.5);
+      background: rgba(254,243,199,.95);
+      color: #92400e;
+    }
+    details.day.day-mixed{
+      border-left-color: rgba(124,58,237,.75);
+      background: linear-gradient(90deg, rgba(237,233,254,.55), rgba(254,243,199,.35), rgba(255,255,255,.92));
+    }
+    details.day.day-mixed summary .badge{
+      border-color: rgba(124,58,237,.35);
+      background: rgba(237,233,254,.95);
+      color: #5b21b6;
+    }
+    details.day.day-route summary:before{background: rgba(16,185,129,.95); box-shadow: 0 0 0 4px var(--ring);}
+    details.day.day-transfer summary:before{background: rgba(245,158,11,.98); box-shadow: 0 0 0 4px var(--ring);}
+    details.day.day-mixed summary:before{background: rgba(139,92,246,.98); box-shadow: 0 0 0 4px var(--ring);}
+
+    details.fold-block{
+      margin-top: 28px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      overflow: hidden;
+    }
+    details.fold-block summary{
+      list-style: none;
+      cursor: pointer;
+      padding: 16px 18px;
+      font-size: 15px;
+      font-weight: 800;
+      border-bottom: 1px solid transparent;
+      background: rgba(240,249,244,.85);
+    }
+    details.fold-block summary::-webkit-details-marker{display:none}
+    details.fold-block[open] summary{
+      border-bottom-color: rgba(20,34,26,.08);
+    }
+    details.fold-block .fold-inner{
+      padding: 18px;
+    }
+
+    #top, #itinerario, #traslado-ida-inicial, #stay-arabba, #dia-d2, #dia-d3, #dia-d4, #dia-d5, #dia-d6, #traslado-arabba-bormio, #stay-bormio, #traslado-vuelta-casa, #resumen, #cotas-altitud, #hoteles-section, #checklist-section, #presupuesto{
+      scroll-margin-top: 110px;
+    }
+
+    /* Bloque solo de desplazamiento entre estancias */
+    details.transfer-bridge{
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      border: 2px dashed rgba(217,119,6,.45);
+      background: rgba(254,243,199,.45);
+      box-shadow: 0 8px 28px rgba(245,158,11,.12);
+    }
+    details.transfer-bridge.transfer-ida{
+      border-color: rgba(13,148,136,.42);
+      background: rgba(204,251,241,.35);
+      box-shadow: 0 8px 28px rgba(13,148,136,.1);
+    }
+    details.transfer-bridge.transfer-ida summary{
+      background: linear-gradient(90deg, rgba(45,212,191,.22), rgba(255,255,255,.88));
+      border-bottom-color: rgba(13,148,136,.22);
+    }
+    details.transfer-bridge.transfer-vuelta{
+      border-color: rgba(79,70,229,.38);
+      background: rgba(237,233,254,.4);
+      box-shadow: 0 8px 28px rgba(99,102,241,.1);
+    }
+    details.transfer-bridge.transfer-vuelta summary{
+      background: linear-gradient(90deg, rgba(167,139,250,.18), rgba(255,255,255,.88));
+      border-bottom-color: rgba(99,102,241,.2);
+    }
+    details.transfer-bridge summary{
+      list-style: none;
+      cursor: pointer;
+      padding: 14px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 14px;
+      border-bottom: 1px solid rgba(217,119,6,.25);
+      background: linear-gradient(90deg, rgba(251,191,36,.22), rgba(255,255,255,.85));
+    }
+    details.transfer-bridge summary::-webkit-details-marker{display:none}
+    .transfer-kicker{
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .45px;
+      text-transform: uppercase;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(217,119,6,.4);
+      background: rgba(254,243,199,.9);
+      color: #92400e;
+    }
+    .transfer-heading{font-weight: 900; font-size: 15px;}
+    .transfer-sub{
+      flex: 1 1 200px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: right;
+    }
+    .transfer-inner{padding: 14px 16px 16px;}
+    .transfer-note{margin: 14px 0 0; font-size: 12px; line-height: 1.45;}
+
+    .sectionTitle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin: 18px 0 10px;
+    }
+    .sectionTitle h3{margin:0; font-size: 14px}
+
+    .hotels{display:grid; grid-template-columns: 1fr; gap:10px}
+    .hotel{
+      border:1px solid var(--border);
+      background: var(--surface-dim);
+      border-radius: 14px;
+      padding: 12px;
+      display:flex;
+      gap:10px;
+      justify-content:space-between;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+    .hotel .name{font-weight:900}
+    .hotel .meta{color:var(--muted); font-size: 12px; margin-top:4px}
+    .hotel .tags{display:flex; gap:6px; flex-wrap:wrap}
+    .tag{font-size: 11px; padding:5px 8px; border:1px solid var(--border); border-radius: 999px; color: var(--muted)}
+
+    .rightStack{display:flex; flex-direction:column; gap:16px}
+
+    /* Map */
+    #map{height: 520px; width: 100%; border-radius: 16px; border:1px solid var(--border)}
+    .legend{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+    .legendItem{display:flex; align-items:center; gap:8px; font-size:12px; color: var(--muted)}
+    .swatch{width:28px; height:10px; border-radius:999px; border:1px solid var(--border)}
+    .swatch.bike{background: rgba(56,189,248,.45)}
+    .swatch.car{background: rgba(251,191,36,.45)}
+
+    /* Distinción de bloques en coche */
+    .pill.car{border-color: rgba(217,119,6,.4); color: #92400e; background: rgba(254,243,199,.88)}
+    .carBlock{
+      border:2px solid rgba(217,119,6,.45);
+      background: rgba(254,243,199,.65);
+      border-radius: 14px;
+      padding: 12px;
+      margin-top: 12px;
+      box-shadow: 0 10px 30px rgba(245,158,11,.12);
+    }
+    .carBlock b{color: #92400e}
+
+    /* Route controls */
+    .routeControls{display:flex; gap:8px; flex-wrap:wrap; margin: 8px 0 0}
+    .routeBtn{font-size:12px; padding:8px 10px; border-radius: 12px; border:1px solid var(--border); background: var(--surface); color: var(--text); cursor:pointer}
+    .routeBtn:hover{background: rgba(240,253,250,.98)}
+    .routeBtn.active{border-color: rgba(13,148,136,.45); background: rgba(204,251,241,.65)}
+
+    /* Timeline layout */
+    .timeline{
+      position: relative;
+      margin-top: 22px;
+      padding-left: 54px;
+    }
+    .timeline:before{
+      content:"";
+      position:absolute;
+      left:24px;
+      top:0;
+      bottom:0;
+      width:4px;
+      background: linear-gradient(to bottom, rgba(56,189,248,.9), rgba(251,191,36,.9));
+      border-radius:4px;
+      opacity:.55;
+    }
+
+    /* Day header marker */
+    details.day{position:relative}
+    details.day summary{align-items:center}
+    details.day summary:before{
+      content:"";
+      position:absolute;
+      left:-38px;
+      top: 22px;
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background: rgba(56,189,248,.95);
+      box-shadow: 0 0 0 4px var(--ring);
+      border:1px solid rgba(255,255,255,.7);
+    }
+
+    /* Schedule blocks (hour-by-hour) */
+    .schedule{display:flex; flex-direction:column; gap:10px; margin-top:12px}
+    .slot{
+      position:relative;
+      padding: 12px 12px 12px 14px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.88);
+    }
+    .slot:before{
+      content:"";
+      position:absolute;
+      left:-30px;
+      top: 16px;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background: rgba(148,163,184,.9);
+      box-shadow: 0 0 0 4px var(--ring);
+    }
+    .slot .t{font-family: var(--mono); font-size:12px; color: rgba(45,55,50,.85)}
+    .slot .a{margin-top:4px; font-weight:800}
+    .slot .d{margin-top:4px; color: var(--muted); font-size:12px}
+
+    .slot.bike{border-color: rgba(14,165,233,.4); background: rgba(224,242,254,.88)}
+    .slot.bike:before{background: rgba(14,165,233,.95)}
+
+    .slot.car{border-color: rgba(217,119,6,.45); background: rgba(254,243,199,.72)}
+    .slot.car:before{background: rgba(245,158,11,.98)}
+
+    .slot.rest{border-color: rgba(5,150,105,.35); background: rgba(209,250,229,.65)}
+    .slot.rest:before{background: rgba(16,185,129,.95)}
+
+    .slot .miniPills{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px}
+    .miniPills .pill{font-size:10.5px; padding:4px 8px}
+
+    /* Base headers */
+    .baseHdr{
+      margin: 22px 0 8px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.72);
+    }
+    .baseHdr .h{font-weight:900; font-size:14px}
+    .baseHdr .s{color: var(--muted); font-size:12px; margin-top:6px}
+    .baseHdr.arabba{border-color: rgba(56,189,248,.45); background: linear-gradient(90deg, rgba(165,243,252,.65), rgba(255,255,255,.92))}
+    .baseHdr.bormio{border-color: rgba(251,191,36,.5); background: linear-gradient(90deg, rgba(254,243,199,.75), rgba(255,255,255,.92))}
+
+    /* --- Enhanced timeline (hour-by-hour) overrides --- */
+    .timeline{margin-top:22px; padding-left:54px}
+    .timeline:before{left:24px; opacity:.55}
+
+    details.day{position:relative}
+    details.day summary{align-items:center}
+    details.day summary:before{
+      content:"";
+      position:absolute;
+      left:-38px;
+      top: 22px;
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background: rgba(56,189,248,.95);
+      box-shadow: 0 0 0 4px var(--ring);
+      border:1px solid rgba(255,255,255,.7);
+    }
+
+    .schedule{display:flex; flex-direction:column; gap:10px; margin-top:12px}
+    .slot{
+      position:relative;
+      padding: 12px 12px 12px 14px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.88);
+    }
+    .slot:before{
+      content:"";
+      position:absolute;
+      left:-30px;
+      top: 16px;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background: rgba(148,163,184,.9);
+      box-shadow: 0 0 0 4px var(--ring);
+    }
+    .slot .t{font-family: var(--mono); font-size:12px; color: rgba(45,55,50,.85)}
+    .slot .a{margin-top:4px; font-weight:900}
+    .slot .d{margin-top:4px; color: var(--muted); font-size:12px}
+
+    .slot.bike{border-color: rgba(14,165,233,.4); background: rgba(224,242,254,.88)}
+    .slot.bike:before{background: rgba(14,165,233,.95)}
+
+    .slot.car{border-color: rgba(217,119,6,.45); background: rgba(254,243,199,.72)}
+    .slot.car:before{background: rgba(245,158,11,.98)}
+
+    .slot.rest{border-color: rgba(5,150,105,.35); background: rgba(209,250,229,.65)}
+    .slot.rest:before{background: rgba(16,185,129,.95)}
+
+    .slot .miniPills{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px}
+    .miniPills .pill{font-size:10.5px; padding:4px 8px}
+
+    .baseHdr{
+      margin: 22px 0 8px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.72);
+    }
+    .baseHdr .h{font-weight:900; font-size:14px}
+    .baseHdr .s{color: var(--muted); font-size:12px; margin-top:6px}
+    .baseHdr.arabba{border-color: rgba(56,189,248,.45); background: linear-gradient(90deg, rgba(165,243,252,.65), rgba(255,255,255,.92))}
+    .baseHdr.bormio{border-color: rgba(251,191,36,.5); background: linear-gradient(90deg, rgba(254,243,199,.75), rgba(255,255,255,.92))}
+
+    /* ============== Índice del viaje (FAB + drawer) ============== */
+    .toc-fab{
+      position: fixed;
+      left: clamp(14px, 3vw, 32px);
+      bottom: clamp(14px, 3vw, 28px);
+      z-index: 95;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 12px 18px 12px 16px;
+      border: 1px solid rgba(15,118,110,.5);
+      border-radius: 999px;
+      background: #0f766e;
+      color: #fff;
+      font-family: var(--sans);
+      font-size: 13.5px;
+      font-weight: 800;
+      letter-spacing: .01em;
+      cursor: pointer;
+      box-shadow: 0 16px 32px rgba(15,118,110,.36);
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    .toc-fab:hover{
+      background: #0d6d66;
+      box-shadow: 0 20px 40px rgba(15,118,110,.42);
+      transform: translateY(-1px);
+    }
+    .toc-fab svg{ width: 18px; height: 18px; flex: 0 0 18px; }
+    @media (max-width: 480px){
+      .toc-fab{ padding: 11px 14px; }
+      .toc-fab .toc-fab-label{ display: none; }
+    }
+
+    .toc-backdrop{
+      position: fixed;
+      inset: 0;
+      background: rgba(8,16,12,.55);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      z-index: 110;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+    }
+    .toc-backdrop.open{ opacity: 1; pointer-events: auto; }
+
+    .toc-drawer{
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: min(370px, 92vw);
+      background: #ffffff;
+      border-right: 1px solid var(--border);
+      box-shadow: 18px 0 50px rgba(8,16,12,.22);
+      z-index: 120;
+      transform: translateX(-110%);
+      transition: transform .26s cubic-bezier(.2, .7, .2, 1);
+      display: flex;
+      flex-direction: column;
+    }
+    .toc-drawer.open{ transform: translateX(0); }
+
+    .toc-header{
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(204,251,241,.55), rgba(255,255,255,1));
+    }
+    .toc-header-text h2{
+      margin: 0;
+      font-size: 15px;
+      font-weight: 900;
+      color: #0f766e;
+      letter-spacing: .02em;
+    }
+    .toc-header-text p{
+      margin: 2px 0 0;
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+    .toc-close{
+      appearance: none;
+      border: 1px solid var(--border);
+      background: #fff;
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      flex: 0 0 36px;
+    }
+    .toc-close:hover{ background: #f3f6f5; }
+
+    .toc-nav{
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 12px 24px;
+    }
+    .toc-section + .toc-section{ margin-top: 18px; }
+    .toc-section-title{
+      font-size: 10.5px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      padding: 10px 12px 6px;
+    }
+    .toc-link{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      margin: 2px 0;
+      border-radius: 10px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.3;
+      border: 1px solid transparent;
+      transition: background .12s ease, color .12s ease, border-color .12s ease;
+    }
+    .toc-link:hover{
+      background: rgba(204,251,241,.55);
+      text-decoration: none;
+      border-color: rgba(13,148,136,.18);
+    }
+    .toc-link.active{
+      background: #0f766e;
+      color: #fff;
+      border-color: #0f766e;
+      box-shadow: 0 8px 18px rgba(15,118,110,.28);
+    }
+    .toc-link.active .toc-day,
+    .toc-link.active .toc-meta{
+      color: #fff;
+      background: rgba(255,255,255,.18);
+    }
+    .toc-toplink{
+      font-size: 13px;
+      color: var(--muted);
+      padding: 8px 12px;
+      border: 1px dashed var(--border);
+      margin-bottom: 6px;
+    }
+    .toc-base{
+      margin: 6px 0 4px;
+      padding: 6px 8px 8px;
+      border-radius: 12px;
+      background: rgba(204,251,241,.34);
+      border: 1px solid rgba(13,148,136,.18);
+    }
+    .toc-base.bormio{
+      background: rgba(254,243,199,.4);
+      border-color: rgba(217,119,6,.28);
+    }
+    .toc-base-title{
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 900;
+      color: #0f766e;
+      padding: 6px 8px 4px;
+      letter-spacing: .01em;
+    }
+    .toc-base.bormio .toc-base-title{ color: #92400e; }
+    .toc-base-title .toc-meta{ color: var(--muted); font-size: 11px; font-weight: 700; }
+    .toc-day{
+      font-family: var(--mono);
+      font-size: 10.5px;
+      font-weight: 900;
+      background: rgba(15,118,110,.12);
+      color: #0f766e;
+      padding: 3px 7px;
+      border-radius: 6px;
+      min-width: 30px;
+      text-align: center;
+      letter-spacing: .03em;
+      flex: 0 0 auto;
+    }
+    .toc-icon{ font-size: 14px; flex: 0 0 auto; }
+    .toc-link > span:not(.toc-day):not(.toc-icon):not(.toc-meta){
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .toc-meta{
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--mono);
+      flex: 0 0 auto;
+    }
+    @media (prefers-reduced-motion: reduce){
+      .toc-drawer, .toc-backdrop, .toc-fab{ transition: none; }
+    }
+
+    /* —— Sidebar persistente en pantallas grandes —— */
+    @media (min-width: 1240px){
+      body{ padding-left: 300px; }
+      .toc-fab{ display: none !important; }
+      .toc-backdrop{ display: none !important; }
+      .toc-drawer{
+        transform: translateX(0) !important;
+        width: 300px;
+        box-shadow: none;
+        border-right: 1px solid var(--border);
+        background: linear-gradient(180deg, #ffffff 0%, #f6fbf8 100%);
+      }
+      .toc-drawer .toc-close{ display: none; }
+      .toc-drawer .toc-header-text p{ display: none; }
+      .skip-link{ left: calc(300px + 12px); }
+    }
+
+    @media print{
+      .bg-scene{ display: none; }
+      body{ background: #fff; }
+      .type-legend{ display: none; }
+      .skip-link, .read-progress, .to-top{ display: none !important; }
+      .toc-fab, .toc-drawer, .toc-backdrop{ display: none !important; }
+      .trip-glance{ box-shadow: none; border-color: #ddd; }
+      details.stay-block, details.transfer-bridge, details.day, details.fold-block, details.route-detail{ break-inside: avoid; }
+      .route-map{ height: 200px; break-inside: avoid; }
+      .leaflet-control-container{ display: none; }
+      details:not([open]) > *:not(summary){ display: revert; }
+      details summary{ list-style: none; }
+    }
+  </style>
+</head>
+<body>
+  <a href="#itinerario" class="skip-link">Saltar al itinerario</a>
+  <div class="read-progress" aria-hidden="true"><span></span></div>
+  <button class="to-top" id="toTop" aria-label="Volver arriba" title="Volver arriba">↑</button>
+
+  <button class="toc-fab" id="tocFab" type="button" aria-label="Abrir índice del viaje" aria-expanded="false" aria-controls="tocDrawer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <line x1="4" y1="6" x2="20" y2="6"/>
+      <line x1="4" y1="12" x2="20" y2="12"/>
+      <line x1="4" y1="18" x2="14" y2="18"/>
+    </svg>
+    <span class="toc-fab-label">Índice</span>
+  </button>
+
+  <div class="toc-backdrop" id="tocBackdrop" aria-hidden="true"></div>
+
+  <aside class="toc-drawer" id="tocDrawer" aria-hidden="true" aria-label="Índice del viaje">
+    <header class="toc-header">
+      <div class="toc-header-text">
+        <h2>Índice del viaje</h2>
+        <p>Pulsa cualquier sección para saltar</p>
+      </div>
+      <button class="toc-close" id="tocClose" type="button" aria-label="Cerrar índice">✕</button>
+    </header>
+    <nav class="toc-nav" aria-label="Secciones del documento">
+      <a href="#top" class="toc-link toc-toplink">↑ Inicio del viaje</a>
+
+      <div class="toc-section">
+        <div class="toc-section-title">Itinerario · 7 días</div>
+
+        <a href="#traslado-ida-inicial" class="toc-link">
+          <span class="toc-day">D1</span>
+          <span class="toc-icon" aria-hidden="true">🚗</span>
+          <span>Gijón → Arabba</span>
+          <span class="toc-meta">Dom 5</span>
+        </a>
+
+        <div class="toc-base">
+          <div class="toc-base-title"><span>🏔 Base Arabba</span><span class="toc-meta">2 noches</span></div>
+          <a href="#dia-d2" class="toc-link">
+            <span class="toc-day">D2</span>
+            <span>Sella Ronda</span>
+            <span class="toc-meta">Lun 6</span>
+          </a>
+          <a href="#dia-d3" class="toc-link">
+            <span class="toc-day">D3</span>
+            <span>Passo Giau</span>
+            <span class="toc-meta">Mar 7</span>
+          </a>
+        </div>
+
+        <a href="#traslado-arabba-bormio" class="toc-link">
+          <span class="toc-day">↪</span>
+          <span class="toc-icon" aria-hidden="true">🚗</span>
+          <span>Arabba → Bormio</span>
+          <span class="toc-meta">Mar 7</span>
+        </a>
+
+        <div class="toc-base bormio">
+          <div class="toc-base-title"><span>🏔 Base Bormio</span><span class="toc-meta">4 noches</span></div>
+          <a href="#dia-d4" class="toc-link">
+            <span class="toc-day">D4</span>
+            <span>Lago di Cancano</span>
+            <span class="toc-meta">Mié 8</span>
+          </a>
+          <a href="#dia-d5" class="toc-link">
+            <span class="toc-day">D5</span>
+            <span>Stelvio</span>
+            <span class="toc-meta">Jue 9</span>
+          </a>
+          <a href="#dia-d6" class="toc-link">
+            <span class="toc-day">D6</span>
+            <span>Gavia / Mortirolo</span>
+            <span class="toc-meta">Vie 10</span>
+          </a>
+        </div>
+
+        <a href="#traslado-vuelta-casa" class="toc-link">
+          <span class="toc-day">D7</span>
+          <span class="toc-icon" aria-hidden="true">🚗</span>
+          <span>Bormio → Gijón</span>
+          <span class="toc-meta">Sáb 11</span>
+        </a>
+      </div>
+
+      <div class="toc-section">
+        <div class="toc-section-title">Referencia</div>
+        <a href="#resumen" class="toc-link"><span>Resumen rápido</span></a>
+        <a href="#cotas-altitud" class="toc-link"><span>Cotas máximas</span></a>
+        <a href="#hoteles-section" class="toc-link"><span>Hoteles sugeridos</span></a>
+        <a href="#checklist-section" class="toc-link"><span>Checklist express</span></a>
+        <a href="#presupuesto" class="toc-link"><span>Presupuesto</span></a>
+      </div>
+    </nav>
+  </aside>
+
+  <div class="bg-scene" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" preserveAspectRatio="xMidYMax meet">
+      <path fill="#2f6f46" d="M0 420 L0 205 Q200 138 420 198 Q620 118 820 172 Q1020 132 1200 158 L1200 420 Z"/>
+      <path fill="#24673d" d="M0 420 L0 252 Q340 198 560 268 Q760 228 980 282 L1200 262 L1200 420 Z"/>
+      <path fill="#1a4f32" d="M0 420 L0 312 Q480 278 700 344 Q940 312 1220 348 L1220 420 Z"/>
+      <path stroke="#5c6570" stroke-width="34" fill="none" stroke-linecap="round" stroke-linejoin="round"
+        d="M -90 455 C 210 360 360 402 570 328 C 760 268 880 298 1010 278 C 1120 262 1180 288 1290 268"/>
+      <path stroke="#94a3af" stroke-width="11" fill="none" opacity=".93"
+        d="M -90 455 C 210 360 360 402 570 328 C 760 268 880 298 1010 278 C 1120 262 1180 288 1290 268"/>
+      <path stroke="#facc15" stroke-width="4" fill="none" stroke-dasharray="14 18" opacity=".97"
+        d="M -90 455 C 210 360 360 402 570 328 C 760 268 880 298 1010 278 C 1120 262 1180 288 1290 268"/>
+      <g transform="translate(268 305) rotate(-13)">
+        <circle cx="0" cy="26" r="10" fill="none" stroke="#14221a" stroke-width="3.2"/>
+        <circle cx="46" cy="26" r="10" fill="none" stroke="#14221a" stroke-width="3.2"/>
+        <path d="M0 26 L20 9 L40 26 M20 9 L44 5" stroke="#14221a" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <g transform="translate(592 282) rotate(9)">
+        <circle cx="0" cy="26" r="10" fill="none" stroke="#14221a" stroke-width="3.2"/>
+        <circle cx="46" cy="26" r="10" fill="none" stroke="#14221a" stroke-width="3.2"/>
+        <path d="M0 26 L20 9 L40 26 M20 9 L44 5" stroke="#14221a" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <g transform="translate(878 262) rotate(-4)">
+        <circle cx="0" cy="24" r="9" fill="none" stroke="#14221a" stroke-width="3"/>
+        <circle cx="42" cy="24" r="9" fill="none" stroke="#14221a" stroke-width="3"/>
+        <path d="M0 24 L18 9 L36 24 M18 9 L40 5" stroke="#14221a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </svg>
+  </div>
+  <div class="wrap" id="top">
+    <header>
+      <div class="title">
+        <h1>Roadtrip ciclista en hotel: Gijón → Dolomitas → Stelvio</h1>
+        <div class="subtitle">Semana objetivo: Domingo 5 julio – Sábado 11 julio (6 noches totales)</div>
+        <div class="chips">
+          <div class="chip"><strong>Ventana</strong>: primera semana de julio</div>
+          <div class="chip"><strong>Regla</strong>: puertos grandes antes de las 8:00</div>
+          <div class="chip"><strong>Meteo</strong>: evitar tardes 14:00–18:00</div>
+          <div class="chip"><strong>Bonus</strong>: Mortirolo opcional</div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="expandAll" type="button">Abrir todo</button>
+        <button class="btn" id="summaryView" type="button" title="Cierra todos los bloques para ver solo cabeceras">Vista resumen</button>
+        <button class="btn" id="collapseAll" type="button">Cerrar todo</button>
+        <button class="btn" id="print" type="button">Imprimir / PDF</button>
+      </div>
+    </header>
+
+    <section class="trip-glance" aria-label="Resumen del viaje en un vistazo">
+      <div class="glance-title">
+        <h2>El viaje en 30 segundos</h2>
+        <span class="glance-sub">Pulsa cualquier sección del <b>índice</b> para saltar a su detalle</span>
+      </div>
+      <div class="glance-kpis">
+        <div class="glance-kpi"><div class="lbl">Duración</div><div class="val">7 días</div><div class="hint">6 noches en hotel</div></div>
+        <div class="glance-kpi"><div class="lbl">Días en bici</div><div class="val">5</div><div class="hint">D2–D6</div></div>
+        <div class="glance-kpi accent"><div class="lbl">Km bici (aprox.)</div><div class="val">~280 km</div><div class="hint">según opción D6</div></div>
+        <div class="glance-kpi accent"><div class="lbl">Desnivel +</div><div class="val">~7.300 m</div><div class="hint">acumulado total</div></div>
+        <div class="glance-kpi"><div class="lbl">Bases</div><div class="val">2</div><div class="hint">Arabba · Bormio</div></div>
+        <div class="glance-kpi"><div class="lbl">Puertos top</div><div class="val">5+</div><div class="hint">Pordoi · Giau · Stelvio · Gavia · Mortirolo</div></div>
+        <div class="glance-kpi"><div class="lbl">Coche I+V</div><div class="val">~3.600 km</div><div class="hint">Gijón ⇄ Dolomitas</div></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="itinerary-full" id="itinerario" aria-labelledby="itinerario-title">
+      <div class="card itinerary-card">
+        <div class="hd">
+          <h2 id="itinerario-title">Itinerario día a día (con opciones)</h2>
+          <div class="muted">Elige cada mañana según piernas</div>
+        </div>
+        <div class="bd">
+          <div class="type-legend" role="note" aria-label="Tipos de bloque">
+            <strong>Leyenda</strong>
+            <span class="lg est"><i aria-hidden="true"></i> Estancia (bases, desplegable)</span>
+            <span class="lg route"><i aria-hidden="true"></i> Día de ruta en bici</span>
+            <span class="lg xfer"><i aria-hidden="true"></i> Día / tramo de traslado en coche</span>
+            <span class="lg bridge"><i aria-hidden="true"></i> Entre bases: solo desplazamiento</span>
+          </div>
+          <div class="itinerary timeline">
+
+            <details class="transfer-bridge transfer-ida" id="traslado-ida-inicial" open>
+              <summary>
+                <span class="transfer-kicker">Desplazamiento</span>
+                <span class="transfer-heading">🚗 Gijón → Arabba · ida inicial</span>
+                <span class="transfer-sub">Dom 5 · ~11–12 h en coche · llegada al hotel por la tarde</span>
+              </summary>
+              <div class="transfer-inner">
+                <div class="schedule">
+                  <div class="slot car">
+                    <div class="t">05:00–06:00</div>
+                    <div class="a">Salida desde Gijón</div>
+                    <div class="d">Paradas cortas cada 2–2,5 h + 1 larga para comer.</div>
+                  </div>
+                  <div class="slot car">
+                    <div class="t">Durante el día</div>
+                    <div class="a">Conducción</div>
+                    <div class="d">Ruta larga por Francia/Italia. Prioridad: eficiencia + descanso.</div>
+                  </div>
+                  <div class="slot rest">
+                    <div class="t">18:00–20:00</div>
+                    <div class="a">Llegada al hotel en Arabba</div>
+                    <div class="d">Primera noche · cena ligera + hidratación + dormir pronto.</div>
+                  </div>
+                </div>
+                <p class="muted transfer-note">La <b>estancia en Arabba</b> (noches en hotel y rutas en bici) está en el bloque siguiente; aquí solo el trayecto en vehículo hasta la base.</p>
+              </div>
+            </details>
+
+            <details class="stay-block stay-arabba" id="stay-arabba" open>
+              <summary>
+                <span class="stay-kicker">Estancia</span>
+                <span class="stay-heading">🏔 Arabba · 2 noches</span>
+                <span class="stay-sub">Lun 6 – Mar 7 (mañana) · Sella Ronda + Passo Giau · tras la ida en coche del domingo</span>
+              </summary>
+              <div class="stay-block-body">
+            <div class="baseHdr arabba" style="margin-top:0; box-shadow:0 12px 30px rgba(56,189,248,.10);">
+              <div style="display:inline-flex; align-items:center; gap:8px; margin-bottom:8px; padding:6px 10px; border-radius:999px; background:rgba(56,189,248,.16); border:1px solid rgba(56,189,248,.35); font-size:11px; font-weight:900; letter-spacing:.4px; text-transform:uppercase; color:#7dd3fc;">Base de estancia</div>
+              <div class="h">🏔 Base 1: ARABBA · 2 noches (Dom noche llegada + Lun)</div>
+              <div class="s"><b>Rutas desde Arabba:</b> Sella Ronda (Lun) y Passo Giau (Mar por la mañana). El desplazamiento desde Gijón el Dom va en el bloque anterior; el traslado a Bormio en el bloque posterior.</div>
+            </div>
+
+            <!-- D2 -->
+            <details class="day day-route" id="dia-d2" open>
+              <summary>
+                <div class="dayLeft">
+                  <div class="badge">D2</div>
+                  <div class="dayMeta">
+                    <div class="dtitle">Lun 6 Jul — Sella Ronda</div>
+                    <div class="dsub">51 km · +1.760 m · Max 2.330 m · Noche 2 Arabba</div>
+                  </div>
+                </div>
+                <div class="pills">
+                  <span class="pill ok">Salida 8:00</span>
+                  <span class="pill">Pordoi · Sella · Gardena · Campolongo</span>
+                </div>
+              </summary>
+              <div class="dayBody">
+                <div class="schedule">
+                  <div class="slot rest">
+                    <div class="t">07:00–07:45</div>
+                    <div class="a">Desayuno</div>
+                    <div class="d">Carbohidrato fácil + algo salado.</div>
+                  </div>
+                </div>
+
+                <details class="route-detail" id="ruta-d2-sella" open>
+                  <summary>
+                    <span class="route-detail-kicker">Ruta D2</span>
+                    <span class="route-detail-name">Sella Ronda · Pordoi · Sella · Gardena · Campolongo</span>
+                    <span class="route-detail-meta">51 km · +1.760 m · máx. 2.330 m</span>
+                  </summary>
+                  <div class="route-detail-body">
+                    <p class="route-desc">Circuito clásico por los cuatro puertos del grupo Sella en sentido <b>antihorario</b> desde Arabba (Pordoi → Sella → Gardena → Campolongo). Día de adaptación al terreno alpino: ritmo constante y sin picos para asentar piernas y cabeza antes de los días duros.</p>
+                    <div class="route-cta">
+                      <a class="route-strava-link" href="https://www.strava.com/routes/3487923354687038542" target="_blank" rel="noopener noreferrer" aria-label="Abrir la ruta Sella Ronda en Strava (se abre en una pestaña nueva)">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+                        <span>Ver ruta en Strava</span>
+                        <span class="ext" aria-hidden="true">↗</span>
+                      </a>
+                    </div>
+                    <dl class="route-detail-stats">
+                      <div class="route-stat"><dt>Distancia</dt><dd>51 km</dd></div>
+                      <div class="route-stat accent"><dt>Desnivel +</dt><dd>1.760 m</dd></div>
+                      <div class="route-stat"><dt>Cota máx.</dt><dd>2.330 m</dd></div>
+                      <div class="route-stat"><dt>Puertos</dt><dd>4</dd></div>
+                    </dl>
+                    <div id="map-route-d2" class="route-map" aria-hidden="true"></div>
+                    <p class="route-disclaimer">Trazado real del GPX (Wikiloc · 4.500 puntos simplificados). Marcadores amarillos en los puertos.</p>
+                  </div>
+                </details>
+
+                <div class="schedule">
+                  <div class="slot rest">
+                    <div class="t">Tarde</div>
+                    <div class="a">Recuperación en Arabba</div>
+                    <div class="d">Comida + hidratación · spa/siesta · preparar bolsa para Bormio.</div>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <!-- D3 — solo bici desde Arabba (el traslado va en el bloque siguiente) -->
+            <details class="day day-route" id="dia-d3" open>
+              <summary>
+                <div class="dayLeft">
+                  <div class="badge">D3</div>
+                  <div class="dayMeta">
+                    <div class="dtitle">Mar 7 Jul — Loop Giau · Falzarego · Valparola</div>
+                    <div class="dsub">83 km · +2.490 m · Max 2.227 m · Última ruta en Dolomitas con base en Arabba</div>
+                  </div>
+                </div>
+                <div class="pills">
+                  <span class="pill ok">Salida 7:30</span>
+                  <span class="pill">Campolongo · Giau · Falzarego · Valparola</span>
+                </div>
+              </summary>
+              <div class="dayBody">
+                <div class="schedule">
+                  <div class="slot rest">
+                    <div class="t">06:45–07:15</div>
+                    <div class="a">Desayuno rápido</div>
+                    <div class="d">Objetivo: coronar antes de 11:00.</div>
+                  </div>
+                </div>
+
+                <details class="route-detail" id="ruta-d3-giau" open>
+                  <summary>
+                    <span class="route-detail-kicker">Ruta D3</span>
+                    <span class="route-detail-name">Loop Corvara · Campolongo · Giau · Falzarego · Valparola</span>
+                    <span class="route-detail-meta">83 km · +2.490 m · máx. 2.227 m</span>
+                  </summary>
+                  <div class="route-detail-body">
+                    <p class="route-desc">Loop con salida y llegada en Corvara que encadena los 4 puertos: subida suave a <b>Campolongo</b>, descenso por Arabba, ascenso largo al <b>Giau</b> (cima del día, muy expuesta), bajada hacia Cortina y regreso por <b>Falzarego</b> + <b>Valparola</b>. Día más exigente del bloque Dolomitas — coronar el Giau antes de las 11:00 para evitar tormentas de tarde.</p>
+                    <div class="route-cta">
+                      <a class="route-strava-link" href="https://www.strava.com/routes/3488097285302171194" target="_blank" rel="noopener noreferrer" aria-label="Abrir la ruta del loop del Giau en Strava (se abre en una pestaña nueva)">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+                        <span>Ver ruta en Strava</span>
+                        <span class="ext" aria-hidden="true">↗</span>
+                      </a>
+                    </div>
+                    <dl class="route-detail-stats">
+                      <div class="route-stat"><dt>Distancia</dt><dd>83 km</dd></div>
+                      <div class="route-stat accent"><dt>Desnivel +</dt><dd>2.490 m</dd></div>
+                      <div class="route-stat"><dt>Cota máx.</dt><dd>2.227 m</dd></div>
+                      <div class="route-stat"><dt>Puertos</dt><dd>4</dd></div>
+                    </dl>
+                    <div id="map-route-d3" class="route-map" aria-hidden="true"></div>
+                    <p class="route-disclaimer">Trazado real del GPX (Bikeforce Dolomitas · 2.624 puntos simplificados). Marcadores amarillos en los puertos.</p>
+                  </div>
+                </details>
+
+                <div class="schedule">
+                  <div class="slot rest">
+                    <div class="t">12:00–13:30</div>
+                    <div class="a">Fin ruta · comida + traslado</div>
+                    <div class="d">Comer simple, recoger equipaje y preparar el coche. El <b>traslado a Bormio</b> sigue en el bloque siguiente.</div>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+              </div>
+            </details>
+
+            <!-- Solo desplazamiento entre bases (entre estancias) -->
+            <details class="transfer-bridge" id="traslado-arabba-bormio" open>
+              <summary>
+                <span class="transfer-kicker">Desplazamiento</span>
+                <span class="transfer-heading">🚗 Arabba → Bormio</span>
+                <span class="transfer-sub">Mar 7 tarde · ~2h30–3 h · solo coche</span>
+              </summary>
+              <div class="transfer-inner">
+                <div class="schedule">
+                  <div class="slot car" style="border-width:2px; box-shadow:0 12px 28px rgba(251,191,36,.12);">
+                    <div style="display:inline-flex; align-items:center; gap:8px; margin-bottom:8px; padding:5px 9px; border-radius:999px; background:rgba(251,191,36,.18); border:1px solid rgba(251,191,36,.45); font-size:10.5px; font-weight:900; letter-spacing:.35px; text-transform:uppercase; color:#92400e;">Salida hacia Bormio</div>
+                    <div class="t">14:30–15:00</div>
+                    <div class="a">Salida en coche (Arabba → Bormio)</div>
+                    <div class="d">Tirano / Valdidentro o ruta equivalente según GPS. Peajes / carretera de montaña: ir cómodos.</div>
+                  </div>
+                  <div class="slot car">
+                    <div class="t">Durante el trayecto</div>
+                    <div class="a">Conducción</div>
+                    <div class="d">Pausas cortas · repostar si hace falta · previsión de tráfico en julio.</div>
+                  </div>
+                  <div class="slot rest">
+                    <div class="t">~17:30–18:30</div>
+                    <div class="a">Llegada a Bormio · check-in</div>
+                    <div class="d">Primera noche en Bormio: cena tranquila y dormir pronto.</div>
+                  </div>
+                </div>
+                <p class="muted transfer-note">Este bloque recoge únicamente el <b>tramo en coche entre bases</b>. El Passo Giau del mismo día está en el bloque <b>Arabba</b>.</p>
+              </div>
+            </details>
+
+            <details class="stay-block stay-bormio" id="stay-bormio" open>
+              <summary>
+                <span class="stay-kicker">Estancia</span>
+                <span class="stay-heading">🏔 Bormio · 4 noches</span>
+                <span class="stay-sub">Mar 7 (tarde) – Vie 10 · Stelvio, Gavia/Mortirolo · la vuelta en coche (sáb) va en bloque aparte</span>
+              </summary>
+              <div class="stay-block-body">
+            <div class="baseHdr bormio" style="margin-top:0; box-shadow:0 12px 30px rgba(251,191,36,.10);">
+              <div style="display:inline-flex; align-items:center; gap:8px; margin-bottom:8px; padding:6px 10px; border-radius:999px; background:rgba(251,191,36,.16); border:1px solid rgba(251,191,36,.45); font-size:11px; font-weight:900; letter-spacing:.4px; text-transform:uppercase; color:#fde68a;">Cambio de base</div>
+              <div class="h">🏔 Base 2: BORMIO · 4 noches (Mar 7 → Vie 10)</div>
+              <div class="s"><b>Rutas desde Bormio:</b> activación suave, Stelvio por las dos caras y opcional Gavia/Mortirolo. El regreso en coche a Gijón el sábado está al final del itinerario, fuera de este bloque.</div>
+            </div>
+
+            <!-- D4 -->
+            <details class="day day-route" id="dia-d4" open>
+              <summary>
+                <div class="dayLeft">
+                  <div class="badge">D4</div>
+                  <div class="dayMeta">
+                    <div class="dtitle">Mié 8 Jul — Activación · Lago di Cancano</div>
+                    <div class="dsub">44 km · +1.024 m · Max 1.888 m · Noche 2 Bormio</div>
+                  </div>
+                </div>
+                <div class="pills">
+                  <span class="pill ok">Salida 9:30</span>
+                  <span class="pill">moderado · Torri di Fraele</span>
+                </div>
+              </summary>
+              <div class="dayBody">
+                <div class="schedule">
+                  <div class="slot rest">
+                    <div class="t">08:30–09:00</div>
+                    <div class="a">Desayuno tranquilo</div>
+                    <div class="d">Sin prisas. Día de recuperación activa.</div>
+                  </div>
+                </div>
+
+                <details class="route-detail" id="ruta-d4-cancano" open>
+                  <summary>
+                    <span class="route-detail-kicker">Ruta D4</span>
+                    <span class="route-detail-name">Bormio · Torri di Fraele · Lago di Cancano</span>
+                    <span class="route-detail-meta">44 km · +1.024 m · máx. 1.888 m</span>
+                  </summary>
+                  <div class="route-detail-body">
+                    <p class="route-desc">Subida tranquila por el valle hacia el Parque Nacional del Stelvio: ascensión por las <b>Torri di Fraele</b> (icónica serie de tornanti entre dos torres medievales) hasta el conjunto de embalses <b>Cancano</b> y <b>San Giacomo</b>. Vistas espectaculares sobre el parque con esfuerzo moderado — ideal para activar piernas tras los días duros de Dolomitas y antes del Stelvio.</p>
+                    <div class="route-cta">
+                      <a class="route-strava-link" href="https://www.strava.com/routes/3488097178960123450" target="_blank" rel="noopener noreferrer" aria-label="Abrir la ruta del Lago di Cancano en Strava (se abre en una pestaña nueva)">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+                        <span>Ver ruta en Strava</span>
+                        <span class="ext" aria-hidden="true">↗</span>
+                      </a>
+                    </div>
+                    <dl class="route-detail-stats">
+                      <div class="route-stat"><dt>Distancia</dt><dd>44 km</dd></div>
+                      <div class="route-stat accent"><dt>Desnivel +</dt><dd>1.024 m</dd></div>
+                      <div class="route-stat"><dt>Cota máx.</dt><dd>1.888 m</dd></div>
+                      <div class="route-stat"><dt>Intensidad</dt><dd>Z2</dd></div>
+                    </dl>
+                    <div id="map-route-d4" class="route-map" aria-hidden="true"></div>
+                    <p class="route-disclaimer">Trazado real del GPX (Wikiloc · 10.523 puntos simplificados). Marcador amarillo en el Lago di Cancano.</p>
+                  </div>
+                </details>
+
+                <div class="schedule">
+                  <div class="slot rest">
+                    <div class="t">Tarde</div>
+                    <div class="a">Comida + spa / descanso</div>
+                    <div class="d">Hidratación, comida limpia y spa. Objetivo: llegar fresco al Stelvio del jueves.</div>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <!-- D5 -->
+            <details class="day day-route" id="dia-d5" open>
+              <summary>
+                <div class="dayLeft">
+                  <div class="badge">D5</div>
+                  <div class="dayMeta">
+                    <div class="dtitle">Jue 9 Jul — Loop Stelvio · Umbrail · Prato</div>
+                    <div class="dsub">100 km · +3.321 m · Max 2.760 m · Noche 3 Bormio · día reina</div>
+                  </div>
+                </div>
+                <div class="pills">
+                  <span class="pill ok">Salida 7:00</span>
+                  <span class="pill bad">día reina · 6–7 h</span>
+                </div>
+              </summary>
+              <div class="dayBody">
+                <div class="schedule">
+                  <div class="slot rest">
+                    <div class="t">06:15–06:45</div>
+                    <div class="a">Desayuno fuerte</div>
+                    <div class="d">Día más largo del viaje (100 km · +3.300 m). Llenar bidones, llevar capas para alta montaña y comida extra.</div>
+                  </div>
+                </div>
+
+                <details class="route-detail" id="ruta-d5-stelvio" open>
+                  <summary>
+                    <span class="route-detail-kicker">Ruta D5</span>
+                    <span class="route-detail-name">Loop Bormio · Umbrail · Prato · Stelvio</span>
+                    <span class="route-detail-meta">100 km · +3.321 m · máx. 2.760 m</span>
+                  </summary>
+                  <div class="route-detail-body">
+                    <p class="route-desc">Loop clásico anti-horario con dos cumbres por encima de 2.500 m: subida desde Bormio, paso por <b>Umbrail</b> (frontera suiza), descenso por Müstair hasta <b>Prato allo Stelvio</b> (~890 m), ascensión a la <b>cima del Stelvio</b> por la legendaria cara norte (48 tornanti) y bajada SS38 a Bormio. Día reina del viaje — coronar Stelvio antes de las 13:00 para evitar tormentas; ropa de alta montaña obligatoria.</p>
+                    <div class="route-cta">
+                      <a class="route-strava-link" href="https://www.strava.com/routes/3488097178963678778" target="_blank" rel="noopener noreferrer" aria-label="Abrir el loop del Stelvio en Strava (se abre en una pestaña nueva)">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+                        <span>Ver ruta en Strava</span>
+                        <span class="ext" aria-hidden="true">↗</span>
+                      </a>
+                    </div>
+                    <dl class="route-detail-stats">
+                      <div class="route-stat"><dt>Distancia</dt><dd>100 km</dd></div>
+                      <div class="route-stat accent"><dt>Desnivel +</dt><dd>3.321 m</dd></div>
+                      <div class="route-stat"><dt>Cota máx.</dt><dd>2.760 m</dd></div>
+                      <div class="route-stat"><dt>Puertos</dt><dd>2</dd></div>
+                    </dl>
+                    <div id="map-route-d5" class="route-map" aria-hidden="true"></div>
+                    <p class="route-disclaimer">Trazado real del GPX (Bikeforce Dolomitas · 2.897 puntos simplificados). Marcadores amarillos en Umbrail y Stelvio.</p>
+                  </div>
+                </details>
+
+                <div class="schedule">
+                  <div class="slot rest">
+                    <div class="t">14:00–17:00</div>
+                    <div class="a">Hotel · comida copiosa + spa/siesta larga</div>
+                    <div class="d">Recuperación seria tras un día muy duro: hidratos + proteína, termas (Bagni Vecchi/Nuovi), siesta. Cena temprana y dormir pronto.</div>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <!-- D6 -->
+            <details class="day day-route" id="dia-d6" open>
+              <summary>
+                <div class="dayLeft">
+                  <div class="badge">D6</div>
+                  <div class="dayMeta">
+                    <div class="dtitle">Vie 10 Jul — Loop Gavia + Mortirolo</div>
+                    <div class="dsub">107 km · +3.009 m · Max 2.622 m · Noche 4 Bormio · final épico</div>
+                  </div>
+                </div>
+                <div class="pills">
+                  <span class="pill ok">Salida 6:30</span>
+                  <span class="pill bad">doble cumbre · 6–8 h</span>
+                </div>
+              </summary>
+              <div class="dayBody">
+                <div class="schedule">
+                  <div class="slot rest">
+                    <div class="t">05:45–06:15</div>
+                    <div class="a">Desayuno fuerte</div>
+                    <div class="d">Día más largo del viaje en distancia (107 km · +3.000 m con dos puertos legendarios). Bidones llenos, comida extra y todas las capas — el segundo puerto cae a media mañana, antes de las tormentas.</div>
+                  </div>
+                </div>
+
+                <details class="route-detail" id="ruta-d6-gavia-mortirolo" open>
+                  <summary>
+                    <span class="route-detail-kicker">Ruta D6</span>
+                    <span class="route-detail-name">Loop Bormio · Gavia · Mortirolo · Bormio</span>
+                    <span class="route-detail-meta">107 km · +3.009 m · máx. 2.622 m</span>
+                  </summary>
+                  <div class="route-detail-body">
+                    <p class="route-desc">Cierre épico del viaje encadenando los dos puertos más míticos del Giro. Subida a <b>Passo di Gavia</b> (2.622 m) por la SS300, descenso técnico hacia el valle de Valtellina hasta <b>Mazzo</b> (~700 m) y ascensión brutal al <b>Mortirolo</b> por la cara más dura (rampas del 18 %, escenario de Pantani 1994). Bajada por Grosio y vuelta remontando el valle hasta Bormio. Día reina para piernas y cabeza — exige que D5 haya ido bien.</p>
+                    <div class="route-cta">
+                      <a class="route-strava-link" href="https://www.strava.com/routes/3488098574587631190" target="_blank" rel="noopener noreferrer" aria-label="Abrir el loop Gavia + Mortirolo en Strava (se abre en una pestaña nueva)">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+                        <span>Ver ruta en Strava</span>
+                        <span class="ext" aria-hidden="true">↗</span>
+                      </a>
+                    </div>
+                    <dl class="route-detail-stats">
+                      <div class="route-stat"><dt>Distancia</dt><dd>107 km</dd></div>
+                      <div class="route-stat accent"><dt>Desnivel +</dt><dd>3.009 m</dd></div>
+                      <div class="route-stat"><dt>Cota máx.</dt><dd>2.622 m</dd></div>
+                      <div class="route-stat"><dt>Puertos</dt><dd>2</dd></div>
+                    </dl>
+                    <div id="map-route-d6" class="route-map" aria-hidden="true"></div>
+                    <p class="route-disclaimer">Trazado real del GPX (Bikeforce Dolomitas · 2.903 puntos simplificados). Marcadores amarillos en Gavia y Mortirolo.</p>
+                  </div>
+                </details>
+
+                <div class="schedule">
+                  <div class="slot rest">
+                    <div class="t">13:30–17:00</div>
+                    <div class="a">Fin ruta · comida + spa</div>
+                    <div class="d">Tarde libre · preparar bolsa y coche para la vuelta del sábado.</div>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+              </div>
+            </details>
+
+            <details class="transfer-bridge transfer-vuelta" id="traslado-vuelta-casa" open>
+              <summary>
+                <span class="transfer-kicker">Desplazamiento</span>
+                <span class="transfer-heading">🚗 Bormio → Gijón · vuelta a casa</span>
+                <span class="transfer-sub">Sáb 11 · día largo · solo coche · cierra el viaje</span>
+              </summary>
+              <div class="transfer-inner">
+                <div class="schedule">
+                  <div class="slot car"><div class="t">06:00–07:00</div><div class="a">Salida en coche (Bormio → Gijón)</div><div class="d">Paradas cortas + 1 larga. Prioridad: seguridad.</div></div>
+                  <div class="slot car"><div class="t">Plan B</div><div class="a">Dividir regreso en Francia</div><div class="d">Albertville o Valence si vais cansados.</div></div>
+                </div>
+                <p class="muted transfer-note">Último tramo en vehículo; independiente de los días de bici en Bormio del bloque anterior.</p>
+              </div>
+            </details>
+
+          </div>
+
+        </div>
+      </div>
+   </section>
+
+   <div class="wrap">
+     <div class="grid-secondary">
+       <div class="column-main">
+
+          
+          <!-- ================= PRESUPUESTO ================= -->
+          <details class="fold-block" id="presupuesto" open>
+            <summary>💶 Estimación económica del viaje (2 personas)</summary>
+            <div class="fold-inner">
+            <div style="font-size:13px; opacity:.8; margin-bottom:18px">Cálculo orientativo para 7 días (5–11 julio) viajando en furgoneta desde Gijón y alojándose en hotel con spa/piscina.</div>
+
+            <h3 style="margin-top:0">🚗 Desplazamiento (ida y vuelta)</h3>
+            <ul>
+              <li>Combustible (≈3.600 km totales · consumo medio 8L/100 · diesel 1,60€) → <b>460–500 €</b></li>
+              <li>Peajes Francia + Italia → <b>180–220 €</b></li>
+              <li>Parking adicional (Prato / Mazzo si aplica) → <b>20–40 €</b></li>
+            </ul>
+            <div style="margin-top:8px"><b>Total desplazamiento estimado: 660–760 €</b></div>
+
+            <h3 style="margin-top:26px">🏨 Hoteles (6 noches)</h3>
+            <ul>
+              <li>Arabba (2 noches · hotel 4★ con spa) → 220–260 €/noche → <b>440–520 €</b></li>
+              <li>Bormio (4 noches · hotel 4★ con spa) → 200–240 €/noche → <b>800–960 €</b></li>
+            </ul>
+            <div style="margin-top:8px"><b>Total alojamiento estimado: 1.240–1.480 €</b></div>
+
+            <h3 style="margin-top:26px">🍽️ Comidas</h3>
+            <ul>
+              <li>Comidas / cenas fuera (≈40–50 €/persona/día × 6 días) → <b>480–600 €</b></li>
+              <li>Snacks ciclismo / cafés / extras → <b>120–160 €</b></li>
+            </ul>
+            <div style="margin-top:8px"><b>Total comidas estimado: 600–760 €</b></div>
+
+            <h3 style="margin-top:26px">📊 Resumen global estimado</h3>
+            <div style="font-size:15px; font-weight:800; margin-top:10px">
+              💰 Total aproximado viaje completo (2 personas):
+              <div style="font-size:20px; margin-top:6px">2.500 € – 3.000 €</div>
+            </div>
+
+            <div style="margin-top:18px; font-size:12px; opacity:.75">
+              *No incluye posibles upgrades de hotel, seguro adicional, mantenimiento bici o imprevistos mecánicos.
+            </div>
+            </div>
+          </details>
+
+          <div class="footer">*Kilómetros y desnivel son estimaciones realistas (pueden variar por el hotel exacto, desvíos y extras). Para minimizar tormentas: puertos grandes siempre por la mañana.</div>
+       </div>
+
+      <aside class="rightStack" aria-label="Resumen y datos de referencia">
+        <div class="card" id="resumen">
+          <div class="hd">
+            <h2>Resumen rápido</h2>
+            <div class="muted">Objetivo: Stelvio perfecto</div>
+          </div>
+          <div class="bd">
+            <div class="kpis">
+              <div class="kpi">
+                <div class="label">Desnivel (sin Mortirolo)</div>
+                <div class="val">≈ 8.700 m</div>
+                <div class="hint">4 días de puertos</div>
+              </div>
+              <div class="kpi">
+                <div class="label">Cota máxima</div>
+                <div class="val">2.758 m</div>
+                <div class="hint">Stelvio</div>
+              </div>
+              <div class="kpi">
+                <div class="label">Ventana recomendada</div>
+                <div class="val">5–11 Jul</div>
+                <div class="hint">más estable</div>
+              </div>
+            </div>
+            <div class="notice"><b>Meteo típica:</b> mañanas estables; tormentas más probables 14:00–18:00. Diferencia térmica posible: <b>25–28°C</b> en valle y <b>5–10°C</b> en la cima.</div>
+          </div>
+        </div>
+
+        <div class="card" id="cotas-altitud">
+          <div class="hd">
+            <h2>Cotas máximas (m)</h2>
+            <div class="muted">y bases</div>
+          </div>
+          <div class="bd">
+            <table>
+              <tr><th>Paso / zona</th><th>Altitud</th></tr>
+              <tr><td>Passo dello Stelvio (cima)</td><td><b>2.758 m</b></td></tr>
+              <tr><td>Passo di Gavia</td><td>2.621 m</td></tr>
+              <tr><td>Umbrail Pass</td><td>2.501 m</td></tr>
+              <tr><td>Passo Pordoi (Sella Ronda)</td><td>2.239 m</td></tr>
+              <tr><td>Passo Giau</td><td>2.236 m</td></tr>
+              <tr><td>Passo del Mortirolo</td><td>1.852 m</td></tr>
+              <tr><td class="muted">Base Arabba (hotel)</td><td class="muted">~1.600 m</td></tr>
+              <tr><td class="muted">Base Bormio (hotel)</td><td class="muted">~1.225 m</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" id="hoteles-section">
+          <div class="hd">
+            <h2>Hoteles (parking + spa/piscina)</h2>
+            <div class="muted">sugerencias</div>
+          </div>
+          <div class="bd">
+            <div class="sectionTitle"><h3>Arabba (2 noches)</h3><span class="muted">Elegir 1</span></div>
+            <div class="hotels">
+              <div class="hotel">
+                <div>
+                  <div class="name">Hotel Alpenrose</div>
+                  <div class="meta">Spa/wellness · Parking · Base premium en Arabba</div>
+                </div>
+                <div class="tags"><span class="tag">spa</span><span class="tag">parking</span><span class="tag">bike-friendly</span></div>
+              </div>
+              <div class="hotel">
+                <div>
+                  <div class="name">Hotel Evaldo</div>
+                  <div class="meta">Wellness/spa · Parking · Muy buena ubicación</div>
+                </div>
+                <div class="tags"><span class="tag">spa</span><span class="tag">parking</span><span class="tag">desayuno top</span></div>
+              </div>
+            </div>
+
+            <div class="sectionTitle"><h3>Bormio (4 noches)</h3><span class="muted">Elegir 1</span></div>
+            <div class="hotels">
+              <div class="hotel">
+                <div>
+                  <div class="name">QC Terme Bagni Nuovi</div>
+                  <div class="meta">Balneario termal · Piscinas · Parking · Recuperación total</div>
+                </div>
+                <div class="tags"><span class="tag">terme</span><span class="tag">piscina</span><span class="tag">parking</span></div>
+              </div>
+              <div class="hotel">
+                <div>
+                  <div class="name">Hotel Bagni Vecchi</div>
+                  <div class="meta">Termas históricas · Spa · Parking (según disponibilidad)</div>
+                </div>
+                <div class="tags"><span class="tag">terme</span><span class="tag">spa</span><span class="tag">experiencia</span></div>
+              </div>
+              <div class="hotel">
+                <div>
+                  <div class="name">Miramonti Park Hotel</div>
+                  <div class="meta">Wellness/piscina · Parking · Alternativa céntrica</div>
+                </div>
+                <div class="tags"><span class="tag">piscina</span><span class="tag">spa</span><span class="tag">parking</span></div>
+              </div>
+            </div>
+
+            <div class="notice"><b>Tip hoteles:</b> confirmad siempre <b>parking</b> (gratis o de pago) y <b>bike room</b> / guardabicis seguro. En julio conviene reservar pronto.</div>
+          </div>
+        </div>
+
+        <div class="card" id="checklist-section">
+          <div class="hd">
+            <h2>Checklist express</h2>
+            <div class="muted">julio alpino</div>
+          </div>
+          <div class="bd">
+            <ul style="margin:0 0 0 18px; padding:0">
+              <li><b>Chaleco cortaviento</b> + <b>manguitos</b> (obligatorio para Stelvio).</li>
+              <li>2 bidones (o bidón grande) + sales.</li>
+              <li>Chubasquero ultraligero si hay meteo dudosa.</li>
+              <li>Luces (túneles/sombra) y efectivo/monedas para paradas.</li>
+              <li>Plan de comida: gel/barrita cada 30–40 min en días largos.</li>
+            </ul>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script>
+    const foldables = document.querySelectorAll('details.stay-block, details.transfer-bridge, details.day, details.fold-block, details.route-detail');
+    const expandAll = document.getElementById('expandAll');
+    const collapseAll = document.getElementById('collapseAll');
+    const summaryView = document.getElementById('summaryView');
+    const printBtn = document.getElementById('print');
+
+    expandAll?.addEventListener('click', () => foldables.forEach(d => { d.open = true; }));
+    collapseAll?.addEventListener('click', () => foldables.forEach(d => { d.open = false; }));
+    printBtn?.addEventListener('click', () => window.print());
+
+    // Vista resumen: cierra todo excepto el bloque de presupuesto si quiere el usuario.
+    // Aquí cierra todos los detalles para mostrar solo cabeceras y el panel de "Viaje en 30s".
+    summaryView?.addEventListener('click', () => {
+      foldables.forEach(d => { d.open = false; });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // —— Barra de progreso de lectura ——
+    const progressFill = document.querySelector('.read-progress > span');
+    const toTopBtn = document.getElementById('toTop');
+    const onScroll = () => {
+      const h = document.documentElement;
+      const max = (h.scrollHeight - h.clientHeight) || 1;
+      const pct = Math.min(100, Math.max(0, (h.scrollTop / max) * 100));
+      if (progressFill) progressFill.style.width = pct + '%';
+      if (toTopBtn) toTopBtn.classList.toggle('visible', h.scrollTop > 480);
+    };
+    document.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    // —— Volver arriba ——
+    toTopBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+    // —— Índice: drawer en móvil, sidebar persistente en pantallas grandes ——
+    const tocFab = document.getElementById('tocFab');
+    const tocDrawer = document.getElementById('tocDrawer');
+    const tocBackdrop = document.getElementById('tocBackdrop');
+    const tocClose = document.getElementById('tocClose');
+    const drawerMQ = window.matchMedia('(min-width: 1240px)');
+    const isPersistent = () => drawerMQ.matches;
+
+    const openToc = () => {
+      if (!tocDrawer || isPersistent()) return;
+      tocDrawer.classList.add('open');
+      tocBackdrop?.classList.add('open');
+      tocDrawer.setAttribute('aria-hidden', 'false');
+      tocFab?.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+      tocClose?.focus({ preventScroll: true });
+    };
+    const closeToc = () => {
+      if (!tocDrawer || isPersistent()) return;
+      tocDrawer.classList.remove('open');
+      tocBackdrop?.classList.remove('open');
+      tocDrawer.setAttribute('aria-hidden', 'true');
+      tocFab?.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    };
+    const syncDrawerForViewport = () => {
+      if (!tocDrawer) return;
+      if (isPersistent()){
+        tocDrawer.classList.remove('open');
+        tocBackdrop?.classList.remove('open');
+        tocDrawer.setAttribute('aria-hidden', 'false');
+        tocFab?.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      } else if (!tocDrawer.classList.contains('open')){
+        tocDrawer.setAttribute('aria-hidden', 'true');
+      }
+    };
+
+    tocFab?.addEventListener('click', openToc);
+    tocClose?.addEventListener('click', closeToc);
+    tocBackdrop?.addEventListener('click', closeToc);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !isPersistent() && tocDrawer?.classList.contains('open')) {
+        closeToc();
+        tocFab?.focus({ preventScroll: true });
+      }
+    });
+    tocDrawer?.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', () => { if (!isPersistent()) setTimeout(closeToc, 80); });
+    });
+    syncDrawerForViewport();
+    drawerMQ.addEventListener('change', syncDrawerForViewport);
+
+    // —— Scroll-spy del Índice: resalta la sección visible ——
+    const tocLinks = Array.from(document.querySelectorAll('.toc-nav a[href^="#"]'));
+    const tocTargets = tocLinks
+      .map(a => document.getElementById(a.getAttribute('href').slice(1)))
+      .filter(Boolean);
+    if ('IntersectionObserver' in window && tocTargets.length){
+      const setActive = (id) => {
+        tocLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+      };
+      const visibleMap = new Map();
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) visibleMap.set(e.target.id, e.intersectionRatio);
+          else visibleMap.delete(e.target.id);
+        });
+        if (visibleMap.size){
+          const top = [...visibleMap.entries()].sort((a,b) => b[1]-a[1])[0][0];
+          setActive(top);
+        }
+      }, { rootMargin: '-110px 0px -55% 0px', threshold: [0, .25, .5, .75, 1] });
+      tocTargets.forEach(t => io.observe(t));
+    }
+
+    // —— Auto-abre el details correspondiente al navegar por ancla ——
+    const openTargetTree = (id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      let cur = el;
+      while (cur && cur !== document.body){
+        if (cur.tagName === 'DETAILS') cur.open = true;
+        cur = cur.parentElement;
+      }
+      if (el.tagName === 'DETAILS') el.open = true;
+    };
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', () => {
+        const id = a.getAttribute('href').slice(1);
+        if (!id) return;
+        openTargetTree(id);
+      });
+    });
+    if (location.hash) openTargetTree(location.hash.slice(1));
+    window.addEventListener('hashchange', () => {
+      if (location.hash) openTargetTree(location.hash.slice(1));
+    });
+
+    function initRouteMaps(){
+      if(typeof L === 'undefined') return;
+      window.__routeMaps = window.__routeMaps || {};
+
+      // Color naranja Strava
+      const STRAVA = '#fc4c02';
+
+      // Traza real GPX (Wikiloc · Sella Ronda) simplificada con Douglas-Peucker
+      const SELLA_RONDA_COORDS = [[46.49927,11.87693],[46.49927,11.87501],[46.49798,11.87445],[46.49752,11.87513],[46.49708,11.87365],[46.49641,11.87327],[46.49677,11.87157],[46.49664,11.87145],[46.49602,11.87183],[46.49620,11.87049],[46.49608,11.87038],[46.49570,11.87069],[46.49555,11.87062],[46.49527,11.86949],[46.49478,11.86858],[46.49472,11.86775],[46.49419,11.86675],[46.49460,11.86711],[46.49485,11.86658],[46.49548,11.86692],[46.49560,11.86675],[46.49523,11.86610],[46.49472,11.86249],[46.49417,11.86139],[46.49388,11.85966],[46.49374,11.85938],[46.49326,11.85932],[46.49335,11.85834],[46.49305,11.85815],[46.49299,11.85751],[46.49308,11.85738],[46.49318,11.85776],[46.49332,11.85776],[46.49322,11.85691],[46.49344,11.85710],[46.49357,11.85698],[46.49312,11.85532],[46.49217,11.85496],[46.49118,11.85388],[46.49056,11.85239],[46.49015,11.84921],[46.48971,11.84837],[46.48893,11.84777],[46.48918,11.84725],[46.48874,11.84683],[46.48856,11.84479],[46.48823,11.84464],[46.48768,11.84556],[46.48770,11.84372],[46.48754,11.84365],[46.48752,11.84410],[46.48736,11.84414],[46.48726,11.84281],[46.48703,11.84368],[46.48690,11.84364],[46.48665,11.84156],[46.48618,11.84299],[46.48588,11.84163],[46.48551,11.84088],[46.48576,11.83887],[46.48559,11.83887],[46.48512,11.83969],[46.48491,11.84093],[46.48470,11.84140],[46.48454,11.84134],[46.48479,11.84065],[46.48430,11.83809],[46.48430,11.83430],[46.48513,11.83128],[46.48495,11.83114],[46.48433,11.83222],[46.48421,11.83230],[46.48416,11.83212],[46.48457,11.83075],[46.48521,11.82976],[46.48524,11.82898],[46.48515,11.82807],[46.48487,11.82797],[46.48470,11.82932],[46.48457,11.82931],[46.48466,11.82878],[46.48450,11.82877],[46.48430,11.82938],[46.48365,11.83020],[46.48396,11.82956],[46.48406,11.82863],[46.48359,11.82678],[46.48401,11.82627],[46.48450,11.82478],[46.48504,11.82410],[46.48490,11.82401],[46.48407,11.82428],[46.48353,11.82488],[46.48297,11.82599],[46.48347,11.82334],[46.48382,11.82284],[46.48323,11.82280],[46.48293,11.82336],[46.48226,11.82366],[46.48200,11.82343],[46.48206,11.82314],[46.48271,11.82265],[46.48296,11.82215],[46.48327,11.81979],[46.48389,11.81738],[46.48457,11.81705],[46.48520,11.81586],[46.48542,11.81574],[46.48602,11.81600],[46.48677,11.81526],[46.48679,11.81368],[46.48739,11.81360],[46.48754,11.81242],[46.48891,11.80903],[46.48920,11.80683],[46.48903,11.80677],[46.48853,11.80782],[46.48833,11.80780],[46.48881,11.80534],[46.48864,11.80518],[46.48825,11.80560],[46.48872,11.80444],[46.48861,11.80428],[46.48830,11.80462],[46.48817,11.80446],[46.48916,11.80325],[46.48906,11.80302],[46.48847,11.80327],[46.48829,11.80304],[46.48896,11.80099],[46.48871,11.80066],[46.48817,11.80086],[46.48735,11.80055],[46.48627,11.79973],[46.48630,11.79953],[46.48718,11.79981],[46.48728,11.79962],[46.48574,11.79794],[46.48607,11.79787],[46.48643,11.79736],[46.48699,11.79772],[46.48721,11.79715],[46.48772,11.79690],[46.48769,11.79345],[46.48792,11.79294],[46.48862,11.79255],[46.48945,11.79145],[46.48984,11.79173],[46.49013,11.79280],[46.49024,11.79254],[46.48985,11.79119],[46.48933,11.79048],[46.48781,11.79137],[46.48685,11.79126],[46.48647,11.79195],[46.48570,11.79077],[46.48542,11.79069],[46.48499,11.79093],[46.48407,11.78784],[46.48357,11.78771],[46.48198,11.78815],[46.48172,11.78852],[46.48165,11.78840],[46.48201,11.78782],[46.48267,11.78776],[46.48353,11.78708],[46.48475,11.78715],[46.48548,11.78799],[46.48583,11.78728],[46.48611,11.78715],[46.48803,11.78822],[46.48893,11.78761],[46.49106,11.78741],[46.49173,11.78700],[46.49363,11.78734],[46.49400,11.78661],[46.49430,11.78644],[46.49584,11.78765],[46.49603,11.78835],[46.49570,11.78798],[46.49560,11.78845],[46.49635,11.78962],[46.49707,11.78990],[46.49845,11.79087],[46.50006,11.79059],[46.50118,11.79154],[46.50165,11.79166],[46.50298,11.79104],[46.50369,11.78982],[46.50258,11.78775],[46.50208,11.78549],[46.50152,11.78467],[46.50081,11.78294],[46.50130,11.78375],[46.50241,11.78399],[46.50286,11.78524],[46.50438,11.78715],[46.50450,11.78683],[46.50406,11.78453],[46.50428,11.78458],[46.50634,11.78716],[46.50680,11.78847],[46.50663,11.78457],[46.50643,11.78358],[46.50592,11.78178],[46.50454,11.77925],[46.50523,11.77840],[46.50530,11.77787],[46.50498,11.77711],[46.50443,11.77677],[46.50410,11.77601],[46.50433,11.77432],[46.50453,11.77536],[46.50535,11.77478],[46.50514,11.77352],[46.50428,11.77308],[46.50559,11.77289],[46.50530,11.77236],[46.50692,11.76990],[46.50782,11.76911],[46.50798,11.76739],[46.50873,11.76627],[46.50814,11.76479],[46.50855,11.76309],[46.50908,11.76209],[46.50933,11.76107],[46.50918,11.76046],[46.50842,11.75945],[46.50792,11.75763],[46.50791,11.75724],[46.50836,11.75684],[46.50893,11.75744],[46.50980,11.75775],[46.50998,11.75808],[46.51002,11.75933],[46.51145,11.76121],[46.51179,11.76215],[46.51261,11.76290],[46.51346,11.76447],[46.51361,11.76555],[46.51616,11.76844],[46.51705,11.76889],[46.51771,11.76955],[46.52039,11.77042],[46.52121,11.77106],[46.52220,11.77149],[46.52215,11.77248],[46.52264,11.77410],[46.52234,11.77471],[46.52224,11.77561],[46.52159,11.77695],[46.52218,11.77841],[46.52435,11.77854],[46.52501,11.77917],[46.52567,11.77886],[46.52740,11.78017],[46.52818,11.77982],[46.52928,11.77988],[46.52951,11.78007],[46.52971,11.78222],[46.53022,11.78367],[46.53100,11.78366],[46.53191,11.78267],[46.53192,11.78102],[46.53228,11.78034],[46.53225,11.77958],[46.53276,11.77830],[46.53387,11.77715],[46.53451,11.77759],[46.53521,11.77694],[46.53609,11.77653],[46.53669,11.77695],[46.53710,11.77685],[46.53735,11.77660],[46.53781,11.77518],[46.53788,11.77652],[46.53766,11.77760],[46.53670,11.77805],[46.53564,11.78104],[46.53473,11.78268],[46.53486,11.78281],[46.53537,11.78243],[46.53728,11.78353],[46.53841,11.78338],[46.53832,11.78377],[46.53761,11.78460],[46.53699,11.78649],[46.53694,11.78725],[46.53778,11.78950],[46.53817,11.79149],[46.53896,11.79345],[46.53936,11.79515],[46.53927,11.79637],[46.53977,11.79895],[46.54077,11.80081],[46.54111,11.80256],[46.54227,11.80431],[46.54344,11.80440],[46.54472,11.80654],[46.54531,11.80690],[46.54604,11.80595],[46.54623,11.80435],[46.54734,11.80389],[46.54783,11.80340],[46.54752,11.80415],[46.54703,11.80464],[46.54718,11.80620],[46.54734,11.80608],[46.54736,11.80508],[46.54764,11.80487],[46.54781,11.80596],[46.54865,11.80675],[46.54908,11.80532],[46.55007,11.80726],[46.54980,11.80866],[46.54991,11.80897],[46.55115,11.81068],[46.55172,11.81104],[46.55166,11.81270],[46.55104,11.81235],[46.55080,11.81273],[46.55070,11.81495],[46.55097,11.81587],[46.55042,11.81508],[46.54998,11.81351],[46.54912,11.81391],[46.54968,11.81461],[46.54939,11.81638],[46.54957,11.81746],[46.54903,11.81627],[46.54881,11.81622],[46.54875,11.81728],[46.54894,11.81801],[46.54867,11.81915],[46.54913,11.81981],[46.54911,11.82055],[46.54958,11.82078],[46.54966,11.82108],[46.54900,11.82113],[46.54844,11.82077],[46.54752,11.82142],[46.54768,11.82160],[46.54860,11.82169],[46.54927,11.82231],[46.54828,11.82220],[46.54775,11.82281],[46.54778,11.82294],[46.54817,11.82282],[46.54906,11.82327],[46.54928,11.82385],[46.54864,11.82352],[46.54828,11.82375],[46.54825,11.82401],[46.54909,11.82464],[46.54962,11.82465],[46.54984,11.82498],[46.55056,11.82854],[46.54973,11.82649],[46.54955,11.82622],[46.54943,11.82639],[46.54975,11.82729],[46.55055,11.83242],[46.55093,11.83342],[46.55075,11.83338],[46.54911,11.83043],[46.54893,11.83036],[46.54975,11.83506],[46.54937,11.83867],[46.54949,11.84015],[46.54933,11.84013],[46.54905,11.83902],[46.54905,11.83762],[46.54872,11.84025],[46.54910,11.84123],[46.54994,11.84242],[46.55002,11.84393],[46.55030,11.84459],[46.55115,11.84568],[46.55207,11.84631],[46.55266,11.84753],[46.55373,11.85165],[46.55272,11.85697],[46.55244,11.85722],[46.55173,11.85705],[46.55145,11.85672],[46.55114,11.85551],[46.55090,11.85553],[46.55086,11.85579],[46.55085,11.85817],[46.55139,11.85961],[46.55185,11.86225],[46.55113,11.86397],[46.55129,11.86891],[46.55233,11.87430],[46.55075,11.87416],[46.54765,11.87535],[46.54692,11.87509],[46.54677,11.87539],[46.54696,11.87585],[46.54653,11.87630],[46.54602,11.87597],[46.54590,11.87524],[46.54570,11.87529],[46.54562,11.87604],[46.54483,11.87564],[46.54489,11.87673],[46.54467,11.87673],[46.54479,11.87650],[46.54462,11.87670],[46.54433,11.87657],[46.54417,11.87671],[46.54434,11.87764],[46.54423,11.87871],[46.54404,11.87859],[46.54381,11.87777],[46.54358,11.87763],[46.54328,11.87803],[46.54339,11.87926],[46.54305,11.88021],[46.54282,11.88019],[46.54256,11.87941],[46.54224,11.87954],[46.54204,11.88198],[46.54193,11.88214],[46.54166,11.88177],[46.54141,11.88181],[46.54152,11.88270],[46.54126,11.88323],[46.54119,11.88405],[46.54074,11.88408],[46.54009,11.88375],[46.53852,11.88501],[46.53776,11.88659],[46.53688,11.88674],[46.53561,11.88755],[46.53547,11.88738],[46.53573,11.88692],[46.53566,11.88672],[46.53518,11.88683],[46.53417,11.88665],[46.53399,11.88525],[46.53272,11.88425],[46.53118,11.88417],[46.52760,11.87940],[46.52542,11.87786],[46.52398,11.87605],[46.52145,11.87391],[46.52107,11.87377],[46.51938,11.87373],[46.51773,11.87287],[46.51603,11.87285],[46.51400,11.87235],[46.51217,11.87425],[46.51012,11.87564],[46.50939,11.87661],[46.50911,11.87666],[46.50862,11.87632],[46.50842,11.87688],[46.50754,11.87792],[46.50705,11.87773],[46.50775,11.87717],[46.50769,11.87690],[46.50620,11.87771],[46.50422,11.87785],[46.50369,11.87762],[46.50337,11.87693],[46.50311,11.87697],[46.50274,11.87732],[46.50190,11.87930],[46.50168,11.88243],[46.50202,11.88505],[46.50155,11.88650],[46.50143,11.88757],[46.50121,11.88442],[46.50104,11.88430],[46.50095,11.88445],[46.50085,11.88529],[46.50068,11.88544],[46.50066,11.88407],[46.49998,11.88176],[46.49924,11.87703],[46.49913,11.87733]];
+
+      // Traza real GPX (Bikeforce · Loop Giau-Falzarego-Valparola) simplificada con Douglas-Peucker
+      const GIAU_LOOP_COORDS = [[46.54962,11.87455],[46.54757,11.87538],[46.54684,11.87514],[46.54675,11.87537],[46.54697,11.87596],[46.54650,11.87633],[46.54602,11.87608],[46.54582,11.87517],[46.54564,11.87607],[46.54492,11.87565],[46.54479,11.87574],[46.54492,11.87670],[46.54418,11.87665],[46.54435,11.87742],[46.54425,11.87871],[46.54409,11.87871],[46.54380,11.87791],[46.54355,11.87777],[46.54334,11.87805],[46.54339,11.87935],[46.54301,11.88027],[46.54280,11.88015],[46.54257,11.87941],[46.54226,11.87946],[46.54201,11.88196],[46.54189,11.88209],[46.54161,11.88173],[46.54140,11.88191],[46.54149,11.88258],[46.54121,11.88328],[46.54126,11.88399],[46.54080,11.88412],[46.54027,11.88374],[46.54001,11.88380],[46.53851,11.88503],[46.53775,11.88661],[46.53677,11.88676],[46.53651,11.88711],[46.53558,11.88757],[46.53546,11.88734],[46.53572,11.88693],[46.53567,11.88669],[46.53525,11.88685],[46.53423,11.88671],[46.53405,11.88647],[46.53405,11.88541],[46.53389,11.88510],[46.53256,11.88421],[46.53122,11.88426],[46.52857,11.88056],[46.52735,11.87920],[46.52548,11.87795],[46.52436,11.87650],[46.52154,11.87398],[46.52117,11.87381],[46.51930,11.87376],[46.51766,11.87285],[46.51610,11.87286],[46.51405,11.87234],[46.51364,11.87255],[46.51194,11.87441],[46.51015,11.87557],[46.50939,11.87661],[46.50916,11.87666],[46.50879,11.87630],[46.50858,11.87632],[46.50844,11.87689],[46.50755,11.87788],[46.50710,11.87782],[46.50707,11.87758],[46.50773,11.87713],[46.50769,11.87689],[46.50632,11.87767],[46.50424,11.87782],[46.50365,11.87758],[46.50334,11.87688],[46.50288,11.87715],[46.50196,11.87899],[46.50167,11.88251],[46.50203,11.88488],[46.50156,11.88632],[46.50150,11.88739],[46.50134,11.88751],[46.50118,11.88441],[46.50098,11.88430],[46.50081,11.88542],[46.50064,11.88549],[46.50062,11.88401],[46.49994,11.88174],[46.49944,11.87912],[46.49922,11.87714],[46.49932,11.87515],[46.49851,11.87457],[46.49778,11.87454],[46.49776,11.87537],[46.49842,11.87581],[46.49874,11.87645],[46.49862,11.87773],[46.49891,11.88162],[46.49859,11.88401],[46.49867,11.88534],[46.49756,11.88909],[46.49752,11.89235],[46.49811,11.89439],[46.49834,11.89832],[46.49886,11.90040],[46.49851,11.90203],[46.49789,11.90345],[46.49703,11.90384],[46.49686,11.90441],[46.49726,11.90685],[46.49754,11.90744],[46.49841,11.90822],[46.49861,11.90999],[46.49821,11.91088],[46.49784,11.91331],[46.49757,11.91752],[46.49781,11.91935],[46.49773,11.91997],[46.49730,11.92023],[46.49702,11.92007],[46.49674,11.91950],[46.49643,11.91970],[46.49553,11.92347],[46.49512,11.92694],[46.49480,11.92819],[46.49481,11.92907],[46.49425,11.93151],[46.49331,11.93362],[46.49264,11.93464],[46.49245,11.93552],[46.49215,11.93584],[46.49145,11.93594],[46.48946,11.93821],[46.48780,11.94223],[46.48761,11.94367],[46.48595,11.94562],[46.48512,11.94690],[46.48342,11.95070],[46.48317,11.95204],[46.48221,11.95254],[46.48173,11.95324],[46.48161,11.95427],[46.48224,11.95511],[46.48220,11.95535],[46.48115,11.95534],[46.48064,11.95596],[46.47844,11.96054],[46.47618,11.96376],[46.47585,11.96526],[46.47580,11.96719],[46.47645,11.97169],[46.47641,11.97307],[46.47728,11.97380],[46.47758,11.97455],[46.47805,11.97436],[46.47878,11.97619],[46.47943,11.97598],[46.47975,11.97659],[46.48037,11.97698],[46.48037,11.97733],[46.47972,11.97830],[46.48005,11.97878],[46.48054,11.97898],[46.48092,11.98003],[46.48196,11.98150],[46.48482,11.98321],[46.48583,11.98410],[46.48659,11.98406],[46.48684,11.98441],[46.48706,11.98563],[46.48790,11.98552],[46.48786,11.98620],[46.48698,11.98703],[46.48710,11.98779],[46.48803,11.98962],[46.48829,11.99054],[46.48799,11.99068],[46.48728,11.99028],[46.48599,11.98999],[46.48316,11.98887],[46.48241,11.98892],[46.48160,11.98808],[46.48155,11.98700],[46.48077,11.98709],[46.47877,11.98668],[46.47748,11.98561],[46.47695,11.98381],[46.47605,11.98231],[46.47523,11.98180],[46.47356,11.98214],[46.47271,11.98083],[46.47128,11.97965],[46.46999,11.97825],[46.46791,11.97772],[46.46551,11.97787],[46.46504,11.97831],[46.46342,11.98175],[46.46333,11.98334],[46.46259,11.98389],[46.46188,11.98486],[46.45965,11.98626],[46.45938,11.98671],[46.45920,11.98888],[46.45873,11.99062],[46.45927,11.99191],[46.45919,11.99227],[46.45850,11.99226],[46.45761,11.99043],[46.45695,11.99004],[46.45681,11.98946],[46.45638,11.98943],[46.45510,11.98998],[46.45458,11.99055],[46.45432,11.99148],[46.45431,11.99311],[46.45300,11.99511],[46.45255,11.99508],[46.45157,11.99389],[46.45092,11.99342],[46.44938,11.99373],[46.44865,11.99357],[46.44798,11.99512],[46.44815,11.99660],[46.44783,11.99839],[46.44718,12.00035],[46.44634,12.00091],[46.44549,12.00079],[46.44492,12.00108],[46.44397,12.00121],[46.44355,12.00228],[46.44349,12.00331],[46.44369,12.00399],[46.44671,12.00646],[46.44681,12.00671],[46.44670,12.00712],[46.44462,12.00945],[46.44443,12.01010],[46.44461,12.01083],[46.44574,12.01166],[46.44709,12.01388],[46.44833,12.01402],[46.45009,12.01517],[46.45157,12.01587],[46.45256,12.01528],[46.45283,12.01548],[46.45285,12.01593],[46.45218,12.01776],[46.45115,12.01939],[46.45043,12.02363],[46.45129,12.02449],[46.45252,12.02488],[46.45306,12.02615],[46.45355,12.02618],[46.45395,12.02801],[46.45393,12.02880],[46.45462,12.02990],[46.45625,12.03083],[46.45627,12.03159],[46.45717,12.03155],[46.45856,12.03203],[46.45896,12.03150],[46.46001,12.03167],[46.46038,12.03194],[46.46106,12.03172],[46.46174,12.03180],[46.46566,12.02999],[46.46632,12.03034],[46.46631,12.02972],[46.46671,12.02998],[46.46733,12.02991],[46.46753,12.03050],[46.46674,12.03184],[46.46675,12.03224],[46.46767,12.03164],[46.46850,12.03153],[46.46961,12.03182],[46.47018,12.03220],[46.47049,12.03191],[46.47063,12.03118],[46.47063,12.03231],[46.47090,12.03267],[46.47112,12.03101],[46.47040,12.02994],[46.47043,12.02971],[46.47137,12.03039],[46.47180,12.03162],[46.47242,12.03103],[46.47452,12.03069],[46.47479,12.03132],[46.47481,12.03200],[46.47522,12.03105],[46.47536,12.03112],[46.47514,12.03276],[46.47497,12.03303],[46.47460,12.03313],[46.47455,12.03389],[46.47515,12.03476],[46.47502,12.03619],[46.47524,12.03932],[46.47621,12.03494],[46.47636,12.03344],[46.47660,12.03310],[46.47698,12.03298],[46.47826,12.03113],[46.47892,12.03202],[46.47831,12.03181],[46.47820,12.03205],[46.47906,12.03264],[46.47955,12.03289],[46.48052,12.03245],[46.47999,12.03344],[46.48101,12.03325],[46.48116,12.03341],[46.48053,12.03377],[46.48054,12.03397],[46.48372,12.03462],[46.48303,12.03498],[46.48180,12.03525],[46.48185,12.03549],[46.48391,12.03565],[46.48502,12.03525],[46.48501,12.03547],[46.48435,12.03596],[46.48454,12.03610],[46.48681,12.03584],[46.48695,12.03551],[46.48686,12.03500],[46.48717,12.03493],[46.48752,12.03608],[46.48643,12.03712],[46.48634,12.03742],[46.48654,12.03763],[46.48757,12.03699],[46.48774,12.03736],[46.48518,12.03953],[46.48421,12.03979],[46.48428,12.04007],[46.48508,12.04008],[46.48563,12.04035],[46.48571,12.04166],[46.48646,12.04163],[46.48662,12.04203],[46.48607,12.04402],[46.48527,12.04539],[46.48467,12.04600],[46.48468,12.04783],[46.48391,12.04799],[46.48372,12.04825],[46.48401,12.04900],[46.48445,12.04932],[46.48434,12.04957],[46.48385,12.04975],[46.48382,12.05017],[46.48451,12.05071],[46.48456,12.05110],[46.48408,12.05172],[46.48363,12.05285],[46.48255,12.05321],[46.48249,12.05467],[46.48167,12.05625],[46.48148,12.05719],[46.48181,12.05735],[46.48249,12.05657],[46.48271,12.05658],[46.48279,12.05952],[46.48319,12.05994],[46.48517,12.05875],[46.48594,12.05737],[46.48682,12.05761],[46.48735,12.05737],[46.48774,12.05742],[46.48839,12.05813],[46.48902,12.05995],[46.49051,12.06158],[46.49169,12.06170],[46.49234,12.06151],[46.49170,12.06272],[46.49102,12.06292],[46.49111,12.06311],[46.49199,12.06335],[46.49197,12.06375],[46.49052,12.06363],[46.48832,12.06392],[46.48822,12.06415],[46.48877,12.06489],[46.48902,12.06571],[46.48971,12.06659],[46.48964,12.06684],[46.48872,12.06681],[46.48871,12.06708],[46.48995,12.06801],[46.49077,12.07037],[46.49132,12.07039],[46.49214,12.07157],[46.49270,12.07199],[46.49263,12.07226],[46.49205,12.07207],[46.49231,12.07282],[46.49318,12.07309],[46.49322,12.07332],[46.49289,12.07349],[46.49286,12.07373],[46.49351,12.07411],[46.49437,12.07555],[46.49530,12.07531],[46.49538,12.07552],[46.49508,12.07572],[46.49510,12.07593],[46.49581,12.07616],[46.49607,12.07542],[46.49747,12.07603],[46.49950,12.07549],[46.50106,12.07546],[46.50186,12.07506],[46.50191,12.07538],[46.50159,12.07544],[46.50156,12.07561],[46.50172,12.07574],[46.50229,12.07549],[46.50232,12.07571],[46.50203,12.07593],[46.50210,12.07614],[46.50245,12.07607],[46.50282,12.07549],[46.50306,12.07650],[46.50362,12.07633],[46.50428,12.07697],[46.50527,12.07671],[46.50623,12.07973],[46.50818,12.08254],[46.50849,12.08329],[46.50963,12.08432],[46.51067,12.08419],[46.51148,12.08501],[46.51151,12.08520],[46.51112,12.08546],[46.51156,12.08579],[46.51193,12.08678],[46.51152,12.08797],[46.51201,12.08839],[46.51195,12.08863],[46.51156,12.08841],[46.51150,12.08870],[46.51245,12.08893],[46.51354,12.08846],[46.51359,12.08883],[46.51313,12.08922],[46.51288,12.09006],[46.51371,12.08972],[46.51402,12.08928],[46.51424,12.08943],[46.51476,12.09283],[46.51555,12.09402],[46.51614,12.09442],[46.51653,12.09530],[46.51642,12.09722],[46.51659,12.09919],[46.51731,12.10004],[46.51728,12.10070],[46.51748,12.10114],[46.51940,12.10413],[46.51978,12.10577],[46.52089,12.10661],[46.52117,12.10705],[46.52148,12.10787],[46.52156,12.10926],[46.52135,12.11026],[46.52158,12.11058],[46.52248,12.11001],[46.52223,12.10902],[46.52280,12.10922],[46.52352,12.10905],[46.52404,12.10761],[46.52393,12.10740],[46.52321,12.10745],[46.52237,12.10632],[46.52246,12.10609],[46.52269,12.10645],[46.52288,12.10631],[46.52250,12.10333],[46.52230,12.10331],[46.52193,12.10382],[46.52107,12.10265],[46.52122,12.10069],[46.52189,12.10051],[46.52211,12.10025],[46.52252,12.09874],[46.52187,12.09664],[46.52158,12.09652],[46.52123,12.09673],[46.52103,12.09665],[46.52125,12.09542],[46.52047,12.09571],[46.52020,12.09542],[46.51988,12.09400],[46.52031,12.09328],[46.51978,12.09164],[46.51980,12.08844],[46.52075,12.08474],[46.52095,12.08450],[46.52156,12.08450],[46.52176,12.08429],[46.52249,12.08206],[46.52238,12.08162],[46.52116,12.08082],[46.52113,12.07943],[46.52060,12.07576],[46.52108,12.07487],[46.52103,12.07193],[46.52137,12.07068],[46.52144,12.06947],[46.52229,12.06734],[46.52236,12.06160],[46.52308,12.05698],[46.52275,12.05225],[46.52241,12.05039],[46.52243,12.04910],[46.52206,12.04781],[46.52194,12.04410],[46.52161,12.04236],[46.52040,12.03863],[46.52055,12.03845],[46.52095,12.03910],[46.52108,12.03883],[46.52033,12.03774],[46.52012,12.03665],[46.52030,12.03645],[46.52077,12.03748],[46.52095,12.03741],[46.52051,12.03437],[46.52012,12.03335],[46.52009,12.03181],[46.51959,12.03112],[46.51908,12.03151],[46.51892,12.03145],[46.51940,12.03018],[46.51859,12.02999],[46.51795,12.02924],[46.51861,12.02751],[46.51970,12.02759],[46.52001,12.02728],[46.51974,12.02534],[46.51974,12.02350],[46.51946,12.02267],[46.51963,12.02245],[46.51984,12.02259],[46.52032,12.02346],[46.52041,12.02165],[46.52016,12.02076],[46.51955,12.01998],[46.51953,12.01960],[46.52039,12.01877],[46.52082,12.01755],[46.52074,12.01704],[46.51952,12.01447],[46.51920,12.01048],[46.51879,12.00916],[46.51895,12.00832],[46.51920,12.00798],[46.52061,12.00764],[46.52177,12.00571],[46.52244,12.00310],[46.52259,12.00178],[46.52358,11.99945],[46.52577,11.99635],[46.52887,11.99005],[46.53025,11.98945],[46.53098,11.98952],[46.53179,11.98884],[46.53251,11.98902],[46.53325,11.98861],[46.53369,11.98890],[46.53398,11.98962],[46.53434,11.98951],[46.53335,11.98648],[46.53351,11.98632],[46.53397,11.98658],[46.53445,11.98771],[46.53469,11.98748],[46.53467,11.98505],[46.53408,11.98397],[46.53410,11.98363],[46.53443,11.98359],[46.53498,11.98401],[46.53559,11.98527],[46.53595,11.98550],[46.53702,11.98487],[46.53920,11.98442],[46.54078,11.98236],[46.54118,11.98154],[46.54159,11.97942],[46.54268,11.97701],[46.54278,11.97514],[46.54345,11.97325],[46.54372,11.97318],[46.54491,11.97363],[46.54596,11.97345],[46.54708,11.97389],[46.54760,11.97520],[46.54779,11.97627],[46.54827,11.97684],[46.54906,11.97714],[46.54972,11.97786],[46.55002,11.97783],[46.55074,11.97729],[46.55115,11.97727],[46.55190,11.97788],[46.55221,11.97856],[46.55280,11.97865],[46.55278,11.97828],[46.55233,11.97793],[46.55181,11.97705],[46.55189,11.97667],[46.55272,11.97767],[46.55347,11.97745],[46.55390,11.97806],[46.55406,11.97803],[46.55407,11.97773],[46.55186,11.97501],[46.55046,11.97279],[46.55027,11.97178],[46.55046,11.97036],[46.54997,11.96846],[46.54869,11.96715],[46.54869,11.96686],[46.54889,11.96688],[46.54931,11.96746],[46.55083,11.96752],[46.55187,11.96885],[46.55223,11.96903],[46.55599,11.96550],[46.55797,11.96181],[46.55857,11.95938],[46.56051,11.95633],[46.56090,11.95481],[46.56187,11.95314],[46.56252,11.95066],[46.56419,11.94682],[46.56426,11.94521],[46.56449,11.94484],[46.56546,11.94423],[46.56558,11.94320],[46.56617,11.94202],[46.56649,11.94077],[46.56717,11.94074],[46.56772,11.94025],[46.56846,11.93667],[46.56868,11.93614],[46.56945,11.93528],[46.57031,11.93155],[46.57109,11.93061],[46.57207,11.92893],[46.57277,11.92847],[46.57346,11.92851],[46.57533,11.92746],[46.57581,11.92663],[46.57617,11.92532],[46.57729,11.92409],[46.57783,11.92206],[46.57878,11.92125],[46.57898,11.92042],[46.57978,11.92059],[46.58107,11.91964],[46.58183,11.91631],[46.58260,11.91423],[46.58318,11.91335],[46.58329,11.91260],[46.58375,11.91159],[46.58366,11.91121],[46.58307,11.91099],[46.58296,11.91072],[46.58342,11.90939],[46.58399,11.90897],[46.58390,11.90881],[46.58354,11.90892],[46.58348,11.90867],[46.58391,11.90746],[46.58435,11.90736],[46.58497,11.90757],[46.58529,11.90736],[46.58542,11.90700],[46.58474,11.90468],[46.58480,11.90418],[46.58284,11.90375],[46.58253,11.90350],[46.58185,11.90140],[46.58044,11.89958],[46.58014,11.89893],[46.57892,11.89799],[46.57746,11.89498],[46.57680,11.89438],[46.57604,11.89313],[46.57438,11.89290],[46.57211,11.89106],[46.56961,11.89078],[46.56914,11.89058],[46.56858,11.88987],[46.56769,11.88747],[46.56718,11.88719],[46.56617,11.88741],[46.56442,11.88652],[46.56370,11.88544],[46.56245,11.88418],[46.56168,11.88295],[46.56085,11.88232],[46.55975,11.88183],[46.55718,11.87752],[46.55231,11.87433],[46.55071,11.87418],[46.54962,11.87455]];
+
+      // Traza real GPX (Bikeforce · Loop Gavia + Mortirolo) simplificada con Douglas-Peucker
+      const GAVIA_MORTIROLO_COORDS = [[46.46891,10.37150],[46.46854,10.37179],[46.46804,10.37183],[46.46631,10.37058],[46.46659,10.37146],[46.46635,10.37235],[46.46520,10.37284],[46.46640,10.37765],[46.46696,10.38073],[46.46678,10.38272],[46.46612,10.38559],[46.46627,10.38959],[46.46605,10.39090],[46.46630,10.39283],[46.46595,10.39534],[46.46591,10.39774],[46.46584,10.39798],[46.46506,10.39857],[46.46324,10.40157],[46.46288,10.40348],[46.46346,10.40486],[46.46334,10.40656],[46.46283,10.40750],[46.46264,10.41056],[46.46221,10.41216],[46.46110,10.41871],[46.46060,10.42076],[46.45905,10.42248],[46.45851,10.42339],[46.45835,10.42572],[46.45759,10.42634],[46.45575,10.43084],[46.45534,10.43126],[46.45393,10.43181],[46.45344,10.43233],[46.45276,10.43388],[46.45241,10.43530],[46.45102,10.43651],[46.45015,10.43767],[46.44821,10.43959],[46.44713,10.43995],[46.44474,10.44165],[46.44166,10.44573],[46.44111,10.44707],[46.44025,10.44807],[46.43940,10.44982],[46.43872,10.45072],[46.43762,10.45163],[46.43597,10.45421],[46.43360,10.45555],[46.43214,10.45612],[46.43037,10.45787],[46.42881,10.45895],[46.42617,10.46224],[46.42454,10.46542],[46.42403,10.46706],[46.42387,10.46829],[46.42289,10.46932],[46.42232,10.47080],[46.42176,10.47140],[46.42006,10.47520],[46.41889,10.47851],[46.41878,10.48148],[46.41769,10.48354],[46.41750,10.48424],[46.41644,10.48563],[46.41590,10.48748],[46.41472,10.48862],[46.41427,10.49089],[46.41245,10.49428],[46.41167,10.49464],[46.41031,10.49580],[46.40977,10.49708],[46.40842,10.49838],[46.40847,10.49757],[46.40927,10.49583],[46.40928,10.49476],[46.40983,10.49366],[46.40927,10.49405],[46.40888,10.49468],[46.40860,10.49568],[46.40792,10.49636],[46.40686,10.49658],[46.40692,10.49709],[46.40613,10.49818],[46.40484,10.49912],[46.40459,10.49984],[46.40359,10.50038],[46.40356,10.50021],[46.40433,10.49957],[46.40450,10.49887],[46.40574,10.49676],[46.40570,10.49662],[46.40546,10.49709],[46.40483,10.49743],[46.40355,10.49907],[46.40344,10.49899],[46.40418,10.49731],[46.40460,10.49679],[46.40493,10.49545],[46.40525,10.49518],[46.40584,10.49403],[46.40515,10.49483],[46.40439,10.49529],[46.40379,10.49612],[46.40314,10.49631],[46.40272,10.49712],[46.40214,10.49769],[46.40147,10.49811],[46.40029,10.49859],[46.39963,10.49863],[46.39868,10.49910],[46.39900,10.49851],[46.40035,10.49746],[46.40117,10.49562],[46.40115,10.49473],[46.40166,10.49319],[46.40177,10.49166],[46.40090,10.49300],[46.39994,10.49559],[46.39955,10.49575],[46.39856,10.49569],[46.39963,10.49476],[46.39988,10.49354],[46.39922,10.49452],[46.39794,10.49444],[46.39715,10.49540],[46.39578,10.49590],[46.39497,10.49668],[46.39383,10.49831],[46.39208,10.49977],[46.39127,10.50000],[46.39056,10.50088],[46.38996,10.50098],[46.38908,10.50031],[46.38874,10.50059],[46.38826,10.49998],[46.38730,10.49937],[46.38646,10.49932],[46.38520,10.49697],[46.38436,10.49642],[46.38416,10.49675],[46.38411,10.49808],[46.38485,10.50117],[46.38461,10.50198],[46.38402,10.50293],[46.38331,10.50338],[46.38160,10.50360],[46.38097,10.50405],[46.38005,10.50369],[46.37895,10.50377],[46.37855,10.50346],[46.37654,10.50383],[46.37563,10.50338],[46.37434,10.50331],[46.37380,10.50246],[46.37348,10.50226],[46.37188,10.50239],[46.37070,10.50213],[46.36821,10.50198],[46.36758,10.50241],[46.36714,10.50205],[46.36624,10.50239],[46.36093,10.50033],[46.36004,10.50047],[46.35926,10.50024],[46.35811,10.49908],[46.35471,10.49760],[46.35390,10.49665],[46.35220,10.49568],[46.35170,10.49499],[46.35014,10.49405],[46.34959,10.49404],[46.34902,10.49364],[46.34829,10.49347],[46.34755,10.49351],[46.34670,10.49410],[46.34630,10.49413],[46.34560,10.49211],[46.34449,10.49125],[46.34410,10.48938],[46.34353,10.48777],[46.34382,10.48434],[46.34255,10.48394],[46.34170,10.48450],[46.34118,10.48549],[46.34036,10.48587],[46.33986,10.48531],[46.33920,10.48508],[46.33910,10.48377],[46.33874,10.48596],[46.33890,10.48784],[46.33928,10.48844],[46.33865,10.48796],[46.33826,10.48665],[46.33827,10.48456],[46.33782,10.48661],[46.33796,10.48828],[46.33636,10.48862],[46.33543,10.48823],[46.33488,10.48774],[46.33417,10.48900],[46.33190,10.48876],[46.33124,10.48907],[46.33031,10.48908],[46.32893,10.48854],[46.32722,10.48947],[46.32627,10.48945],[46.32459,10.49043],[46.32392,10.49044],[46.32295,10.49144],[46.32222,10.49145],[46.32121,10.49260],[46.31981,10.49365],[46.31892,10.49548],[46.31831,10.49618],[46.31819,10.49758],[46.31691,10.49838],[46.31515,10.49993],[46.31477,10.49999],[46.31465,10.50086],[46.31417,10.50158],[46.31410,10.50239],[46.31288,10.50432],[46.31231,10.50451],[46.31102,10.50407],[46.31084,10.50456],[46.30959,10.50594],[46.30832,10.50780],[46.30909,10.50466],[46.30770,10.50674],[46.30739,10.50856],[46.30731,10.50676],[46.30833,10.50444],[46.30790,10.50528],[46.30685,10.50578],[46.30619,10.50790],[46.30642,10.50880],[46.30601,10.50932],[46.30499,10.50937],[46.30460,10.50993],[46.30253,10.51043],[46.30197,10.51158],[46.30236,10.51016],[46.30413,10.50923],[46.30424,10.50824],[46.30419,10.50885],[46.30397,10.50913],[46.30124,10.50961],[46.30064,10.50994],[46.30032,10.51040],[46.30094,10.50932],[46.30289,10.50801],[46.30299,10.50694],[46.30349,10.50590],[46.30341,10.50572],[46.30221,10.50722],[46.30136,10.50780],[46.29991,10.50830],[46.29812,10.51006],[46.29723,10.51067],[46.29714,10.51057],[46.29759,10.50974],[46.30001,10.50690],[46.30065,10.50590],[46.30123,10.50442],[46.30168,10.50389],[46.30193,10.50281],[46.30139,10.50361],[46.29869,10.50590],[46.29798,10.50625],[46.29717,10.50631],[46.29644,10.50694],[46.29491,10.50753],[46.29314,10.50920],[46.29262,10.51161],[46.29199,10.51241],[46.29121,10.51279],[46.29083,10.51327],[46.29030,10.51459],[46.28911,10.51606],[46.28894,10.51677],[46.28781,10.51888],[46.28685,10.51949],[46.28540,10.52084],[46.28613,10.51859],[46.28704,10.51817],[46.28725,10.51769],[46.28709,10.51742],[46.28505,10.51809],[46.28425,10.51885],[46.28335,10.51889],[46.28250,10.51863],[46.28136,10.51881],[46.27994,10.51966],[46.27790,10.51937],[46.27662,10.51974],[46.27460,10.51914],[46.27405,10.51922],[46.27362,10.51838],[46.27299,10.51772],[46.27231,10.51740],[46.27128,10.51736],[46.26999,10.51761],[46.26920,10.51745],[46.26813,10.51771],[46.26710,10.51727],[46.26626,10.51738],[46.26564,10.51788],[46.26515,10.51776],[46.26403,10.51718],[46.26313,10.51645],[46.26236,10.51543],[46.26170,10.51387],[46.26132,10.51156],[46.26084,10.51173],[46.26045,10.51143],[46.26013,10.51065],[46.25991,10.51074],[46.26010,10.51018],[46.25999,10.50983],[46.25939,10.50960],[46.25893,10.50813],[46.25849,10.50845],[46.25893,10.50813],[46.25921,10.50658],[46.25874,10.50624],[46.25870,10.50540],[46.25836,10.50515],[46.25822,10.50445],[46.25744,10.50299],[46.25642,10.49937],[46.25581,10.49825],[46.25385,10.49612],[46.25322,10.49574],[46.25302,10.49529],[46.25272,10.49307],[46.25321,10.49186],[46.25332,10.49101],[46.25322,10.48937],[46.25281,10.48841],[46.25232,10.48581],[46.25267,10.48463],[46.25239,10.48364],[46.25232,10.48193],[46.25042,10.47504],[46.24921,10.47234],[46.24866,10.47025],[46.24875,10.46633],[46.24976,10.46344],[46.24973,10.46111],[46.24921,10.45732],[46.24865,10.45547],[46.24743,10.45396],[46.24653,10.45228],[46.24457,10.44590],[46.24492,10.44336],[46.24462,10.44199],[46.24474,10.44089],[46.24456,10.43895],[46.24399,10.43645],[46.24319,10.43492],[46.24302,10.43390],[46.24302,10.43291],[46.24350,10.43126],[46.24324,10.42579],[46.24284,10.42484],[46.24202,10.42414],[46.24168,10.42290],[46.24167,10.42170],[46.24229,10.41943],[46.24217,10.41753],[46.24070,10.41386],[46.24011,10.41008],[46.24028,10.40903],[46.24108,10.40700],[46.24117,10.40581],[46.24071,10.40268],[46.24005,10.40086],[46.23962,10.39640],[46.23905,10.39420],[46.23655,10.38750],[46.23389,10.38277],[46.23345,10.37994],[46.23257,10.37701],[46.23141,10.37539],[46.23066,10.37392],[46.22894,10.37282],[46.22805,10.37081],[46.22749,10.36842],[46.22633,10.36720],[46.22482,10.36409],[46.22200,10.36008],[46.21914,10.35702],[46.21854,10.35437],[46.21805,10.35319],[46.21616,10.35259],[46.21561,10.35166],[46.21436,10.35142],[46.21285,10.34960],[46.21189,10.34952],[46.20969,10.34851],[46.20917,10.34776],[46.20883,10.34485],[46.20902,10.34481],[46.20960,10.34664],[46.20969,10.34444],[46.21071,10.34227],[46.21091,10.34234],[46.21121,10.34321],[46.21119,10.34373],[46.21080,10.34414],[46.21094,10.34432],[46.21145,10.34387],[46.21204,10.34290],[46.21226,10.34152],[46.21242,10.34156],[46.21226,10.34340],[46.21166,10.34462],[46.21172,10.34482],[46.21292,10.34284],[46.21360,10.33812],[46.21341,10.33725],[46.21290,10.33628],[46.21314,10.33376],[46.21368,10.33229],[46.21437,10.33112],[46.21513,10.33030],[46.21685,10.32675],[46.21836,10.32575],[46.21740,10.32697],[46.21695,10.32813],[46.21675,10.33116],[46.21703,10.33455],[46.21745,10.33553],[46.21747,10.33657],[46.21850,10.33718],[46.21864,10.33748],[46.21823,10.33791],[46.21834,10.33851],[46.21713,10.34085],[46.21679,10.34205],[46.21685,10.34274],[46.21712,10.34311],[46.21700,10.34213],[46.21751,10.34116],[46.21805,10.34092],[46.21855,10.34004],[46.21949,10.33970],[46.21972,10.33914],[46.22041,10.33857],[46.22063,10.33808],[46.22034,10.33729],[46.22044,10.33659],[46.21998,10.33599],[46.21961,10.33498],[46.21965,10.33292],[46.21945,10.33186],[46.21955,10.33019],[46.22031,10.32995],[46.22155,10.32820],[46.22249,10.32783],[46.22306,10.32705],[46.22419,10.32633],[46.22463,10.32533],[46.22540,10.32445],[46.22595,10.32407],[46.22695,10.32393],[46.22822,10.32341],[46.22916,10.32215],[46.22955,10.32193],[46.23159,10.32147],[46.23254,10.32145],[46.23305,10.32040],[46.23373,10.32002],[46.23438,10.32018],[46.23534,10.32100],[46.23597,10.32108],[46.23824,10.31981],[46.23896,10.32058],[46.23999,10.31966],[46.24341,10.31900],[46.24373,10.31757],[46.24427,10.31807],[46.24454,10.31743],[46.24492,10.31778],[46.24509,10.31753],[46.24542,10.31811],[46.24565,10.31813],[46.24620,10.31756],[46.24640,10.31677],[46.24682,10.31703],[46.24703,10.31686],[46.24686,10.31571],[46.24700,10.31451],[46.24732,10.31514],[46.24779,10.31534],[46.24761,10.31468],[46.24820,10.31494],[46.24945,10.31320],[46.25030,10.30959],[46.24907,10.30674],[46.24846,10.30615],[46.24847,10.30394],[46.24813,10.30264],[46.24812,10.30102],[46.24782,10.30046],[46.24813,10.29945],[46.24800,10.29856],[46.24746,10.29789],[46.24685,10.29759],[46.24607,10.29631],[46.24546,10.29592],[46.24612,10.29571],[46.24724,10.29616],[46.24741,10.29597],[46.24659,10.29536],[46.24696,10.29526],[46.24639,10.29446],[46.24627,10.29346],[46.24673,10.29221],[46.24616,10.29127],[46.24549,10.29074],[46.24557,10.29051],[46.24611,10.29029],[46.24628,10.28994],[46.24532,10.28860],[46.24614,10.28892],[46.24646,10.28863],[46.24794,10.28913],[46.24968,10.28834],[46.25054,10.28864],[46.25145,10.28850],[46.25213,10.28883],[46.25284,10.28862],[46.25382,10.28954],[46.25520,10.28990],[46.25698,10.29148],[46.25808,10.29168],[46.25943,10.29150],[46.25987,10.29235],[46.26054,10.29254],[46.26091,10.29246],[46.26214,10.29154],[46.26315,10.29174],[46.26324,10.29117],[46.26301,10.29067],[46.26318,10.29054],[46.26351,10.29078],[46.26349,10.29025],[46.26365,10.29013],[46.26417,10.29055],[46.26426,10.29122],[46.26458,10.29039],[46.26484,10.29136],[46.26545,10.29191],[46.26600,10.29212],[46.26638,10.29124],[46.26673,10.29101],[46.26704,10.29112],[46.26742,10.29170],[46.26730,10.29130],[46.26771,10.29070],[46.26782,10.28903],[46.26807,10.28863],[46.26837,10.28854],[46.26897,10.28906],[46.26886,10.28861],[46.26932,10.28828],[46.26968,10.28700],[46.27036,10.28663],[46.27048,10.28543],[46.27080,10.28507],[46.27240,10.28485],[46.27498,10.28506],[46.27595,10.28481],[46.27759,10.28384],[46.27950,10.28362],[46.28148,10.28400],[46.28322,10.28402],[46.28350,10.28413],[46.28396,10.28493],[46.28497,10.28529],[46.28629,10.28524],[46.28742,10.28555],[46.28793,10.28600],[46.28763,10.28497],[46.28774,10.28487],[46.28857,10.28598],[46.29039,10.28743],[46.29073,10.28790],[46.29047,10.28716],[46.29059,10.28710],[46.29104,10.28768],[46.29262,10.28879],[46.29353,10.28982],[46.29407,10.29089],[46.29379,10.28973],[46.29331,10.28914],[46.29320,10.28868],[46.28942,10.28395],[46.28847,10.28143],[46.28791,10.28122],[46.28683,10.28013],[46.28682,10.27958],[46.28712,10.27934],[46.28815,10.28034],[46.28920,10.28044],[46.28964,10.28176],[46.29074,10.28230],[46.29096,10.28349],[46.29159,10.28346],[46.29202,10.28403],[46.29350,10.28491],[46.29421,10.28510],[46.29468,10.28551],[46.29401,10.28416],[46.29363,10.28286],[46.29418,10.28333],[46.29449,10.28393],[46.29445,10.28311],[46.29518,10.28415],[46.29571,10.28445],[46.29579,10.28434],[46.29376,10.28130],[46.29390,10.28125],[46.29511,10.28235],[46.29604,10.28267],[46.29651,10.28316],[46.29715,10.28495],[46.29787,10.28574],[46.29921,10.28665],[46.30024,10.28828],[46.30102,10.28838],[46.30116,10.28974],[46.30097,10.29112],[46.30176,10.29143],[46.30217,10.29304],[46.30336,10.29547],[46.30411,10.29572],[46.30522,10.29566],[46.30678,10.29350],[46.31087,10.29829],[46.31241,10.29942],[46.31324,10.30053],[46.31473,10.30102],[46.31926,10.30612],[46.31986,10.30800],[46.32093,10.30970],[46.32159,10.31145],[46.32178,10.31294],[46.32210,10.31387],[46.32344,10.31531],[46.32529,10.31818],[46.32565,10.32117],[46.32640,10.32363],[46.32658,10.32514],[46.32658,10.32627],[46.32575,10.32820],[46.32563,10.32904],[46.32613,10.33531],[46.32657,10.33611],[46.32690,10.33800],[46.32763,10.33937],[46.32777,10.34039],[46.32942,10.34361],[46.32980,10.34383],[46.33090,10.34659],[46.33183,10.34761],[46.33336,10.34863],[46.33454,10.34891],[46.33630,10.34895],[46.33733,10.34954],[46.34145,10.35085],[46.34344,10.35055],[46.34421,10.35076],[46.34488,10.35116],[46.34548,10.35188],[46.34901,10.35424],[46.34933,10.35510],[46.34996,10.35487],[46.35049,10.35422],[46.35149,10.35518],[46.35373,10.35661],[46.35433,10.35657],[46.35542,10.35589],[46.35621,10.35439],[46.35657,10.35413],[46.35816,10.35431],[46.35872,10.35530],[46.35918,10.35558],[46.36043,10.35484],[46.36420,10.35464],[46.36571,10.35521],[46.36741,10.35643],[46.37024,10.35664],[46.37082,10.35723],[46.37191,10.35750],[46.37230,10.35878],[46.37270,10.35916],[46.37497,10.35947],[46.37812,10.35893],[46.37888,10.35847],[46.37955,10.35753],[46.37999,10.35722],[46.38628,10.35673],[46.39180,10.35339],[46.39231,10.35340],[46.39286,10.35396],[46.39387,10.35444],[46.39429,10.35543],[46.39482,10.35587],[46.39693,10.35503],[46.39791,10.35520],[46.39994,10.35482],[46.40181,10.35414],[46.40415,10.35195],[46.40569,10.35123],[46.40744,10.35069],[46.41041,10.35065],[46.41086,10.35048],[46.41204,10.34945],[46.41360,10.35026],[46.41375,10.35073],[46.41648,10.35247],[46.41951,10.35330],[46.42414,10.35539],[46.42685,10.35685],[46.42857,10.35729],[46.42998,10.35697],[46.43030,10.35711],[46.43144,10.35789],[46.43282,10.35842],[46.43405,10.35991],[46.43458,10.36024],[46.43539,10.36029],[46.43609,10.36000],[46.43825,10.35817],[46.43897,10.35797],[46.44538,10.36124],[46.44593,10.36140],[46.44703,10.36124],[46.44738,10.36263],[46.44799,10.36359],[46.44940,10.36411],[46.45202,10.36570],[46.45471,10.36643],[46.45749,10.36835],[46.46164,10.36955],[46.46220,10.36989],[46.46368,10.37139],[46.46467,10.37294],[46.46620,10.37253],[46.46659,10.37146],[46.46701,10.37120],[46.46813,10.37185],[46.46891,10.37150]];
+
+      // Traza real GPX (Wikiloc · Bormio → Lago di Cancano) simplificada con Douglas-Peucker
+      const CANCANO_COORDS = [[46.41076,10.35057],[46.41213,10.35042],[46.41354,10.35060],[46.41640,10.35247],[46.41977,10.35346],[46.42399,10.35539],[46.42419,10.35536],[46.42446,10.35487],[46.42784,10.35678],[46.42848,10.35685],[46.42965,10.35654],[46.43022,10.35657],[46.43138,10.35736],[46.43281,10.35770],[46.43398,10.35920],[46.43460,10.35961],[46.43518,10.35938],[46.43640,10.35842],[46.43744,10.35721],[46.43853,10.35689],[46.43915,10.35649],[46.44355,10.35810],[46.44413,10.35779],[46.44516,10.35773],[46.44616,10.35740],[46.44718,10.35757],[46.44730,10.35722],[46.44754,10.35715],[46.44814,10.35730],[46.44829,10.35761],[46.44808,10.35903],[46.44824,10.36093],[46.45278,10.36001],[46.45303,10.35958],[46.45374,10.35989],[46.45923,10.35887],[46.45932,10.35908],[46.46009,10.35910],[46.46094,10.35997],[46.46608,10.37031],[46.46693,10.37119],[46.46803,10.37190],[46.46859,10.37187],[46.46945,10.37091],[46.46983,10.36889],[46.47131,10.36685],[46.47236,10.36618],[46.47286,10.36559],[46.47573,10.36336],[46.47773,10.36230],[46.47871,10.36135],[46.47964,10.35956],[46.48042,10.35630],[46.48080,10.35556],[46.48194,10.35469],[46.48396,10.35386],[46.48431,10.35325],[46.48483,10.35327],[46.48462,10.35302],[46.48491,10.35292],[46.48525,10.35158],[46.48534,10.34985],[46.48593,10.34764],[46.48583,10.34676],[46.48540,10.34566],[46.48459,10.34436],[46.48556,10.34004],[46.48554,10.34150],[46.48575,10.34270],[46.48590,10.34157],[46.48634,10.34048],[46.48646,10.33629],[46.48716,10.34106],[46.48732,10.34117],[46.48743,10.33581],[46.48722,10.33358],[46.48830,10.32580],[46.49034,10.32018],[46.49235,10.31609],[46.49323,10.31511],[46.49413,10.31259],[46.49454,10.31227],[46.49531,10.31275],[46.49676,10.31208],[46.49714,10.31156],[46.49675,10.30996],[46.49691,10.30777],[46.49640,10.30607],[46.49712,10.30709],[46.49674,10.30585],[46.49752,10.30705],[46.49699,10.30556],[46.49918,10.30836],[46.49806,10.30564],[46.49971,10.30809],[46.49921,10.30661],[46.49992,10.30778],[46.50001,10.30767],[46.49912,10.30530],[46.50103,10.30817],[46.49989,10.30581],[46.49971,10.30504],[46.50080,10.30687],[46.50180,10.30795],[46.50087,10.30650],[46.50008,10.30456],[46.50131,10.30651],[46.50188,10.30706],[46.50070,10.30424],[46.50140,10.30550],[46.50227,10.30657],[46.50235,10.30706],[46.50208,10.30723],[46.50241,10.30766],[46.50274,10.30890],[46.50223,10.30965],[46.50244,10.31040],[46.50306,10.31143],[46.50422,10.31243],[46.50657,10.31340],[46.50697,10.31338],[46.50774,10.31282],[46.50908,10.31312],[46.51030,10.31483],[46.51162,10.31625],[46.51193,10.31734],[46.51287,10.31865],[46.51329,10.31857],[46.51434,10.31670],[46.51465,10.31690],[46.51471,10.31668],[46.51459,10.31678],[46.51440,10.31660],[46.51495,10.31535],[46.51518,10.31505],[46.51526,10.31530],[46.51505,10.31519],[46.51325,10.31855],[46.51288,10.31860],[46.51197,10.31737],[46.51158,10.31616],[46.51033,10.31479],[46.50916,10.31306],[46.50776,10.31271],[46.50708,10.31324],[46.50657,10.31331],[46.50424,10.31238],[46.50301,10.31128],[46.50224,10.30974],[46.50263,10.30902],[46.50193,10.30781],[46.50225,10.30800],[46.50224,10.30640],[46.50147,10.30556],[46.50068,10.30408],[46.50128,10.30598],[46.50188,10.30698],[46.50136,10.30654],[46.50041,10.30514],[46.50012,10.30440],[46.50005,10.30453],[46.50090,10.30660],[46.50179,10.30792],[46.50087,10.30693],[46.49966,10.30488],[46.49990,10.30583],[46.50105,10.30809],[46.49910,10.30519],[46.50002,10.30767],[46.49923,10.30649],[46.49975,10.30799],[46.49804,10.30555],[46.49919,10.30832],[46.49701,10.30547],[46.49756,10.30698],[46.49674,10.30578],[46.49716,10.30702],[46.49629,10.30594],[46.49685,10.30762],[46.49671,10.30981],[46.49711,10.31152],[46.49668,10.31206],[46.49526,10.31275],[46.49448,10.31221],[46.49407,10.31251],[46.49307,10.31522],[46.49230,10.31602],[46.49140,10.31774],[46.49095,10.31906],[46.49025,10.32018],[46.48822,10.32578],[46.48713,10.33328],[46.48736,10.33620],[46.48729,10.34115],[46.48641,10.33612],[46.48633,10.34024],[46.48583,10.34162],[46.48587,10.34263],[46.48577,10.34273],[46.48555,10.34128],[46.48564,10.33996],[46.48461,10.34422],[46.48574,10.34665],[46.48590,10.34775],[46.48530,10.34988],[46.48529,10.35115],[46.48477,10.35141],[46.48428,10.35242],[46.48480,10.35323],[46.48435,10.35318],[46.48389,10.35379],[46.48192,10.35463],[46.48081,10.35544],[46.48009,10.35722],[46.47959,10.35945],[46.47863,10.36127],[46.47768,10.36220],[46.47564,10.36329],[46.47295,10.36542],[46.47257,10.36590],[46.47127,10.36669],[46.46979,10.36878],[46.46941,10.37081],[46.46860,10.37178],[46.46811,10.37182],[46.46735,10.37138],[46.46623,10.37032],[46.46093,10.35976],[46.46036,10.35912],[46.45936,10.35891],[46.45927,10.35861],[46.45918,10.35896],[46.45399,10.35985],[46.45351,10.35987],[46.45302,10.35956],[46.45273,10.36004],[46.44834,10.36096],[46.44812,10.35903],[46.44840,10.35754],[46.44822,10.35727],[46.44742,10.35699],[46.44721,10.35753],[46.44596,10.35738],[46.44520,10.35768],[46.44415,10.35775],[46.44366,10.35808],[46.44231,10.35775],[46.44145,10.35717],[46.43916,10.35642],[46.43863,10.35684],[46.43740,10.35721],[46.43646,10.35833],[46.43514,10.35936],[46.43465,10.35952],[46.43403,10.35915],[46.43281,10.35756],[46.43154,10.35724],[46.43026,10.35647],[46.42799,10.35674],[46.42452,10.35488],[46.42406,10.35534],[46.41958,10.35330],[46.41648,10.35244],[46.41382,10.35082],[46.41249,10.35060],[46.41074,10.35082]];
+
+      // Traza real GPX (Bikeforce · Loop Stelvio-Umbrail-Prato) simplificada con Douglas-Peucker
+      const STELVIO_LOOP_COORDS = [[46.46891,10.37150],[46.46946,10.37064],[46.46978,10.36878],[46.47131,10.36664],[46.47264,10.36591],[46.47283,10.36588],[46.47295,10.36612],[46.47233,10.36786],[46.47246,10.36817],[46.47375,10.36712],[46.47442,10.36690],[46.47753,10.36733],[46.47763,10.36761],[46.47641,10.36833],[46.47632,10.36855],[46.47768,10.36896],[46.47806,10.36952],[46.47842,10.36951],[46.47987,10.36841],[46.48173,10.36835],[46.48222,10.36797],[46.48269,10.36712],[46.48371,10.36645],[46.48414,10.36565],[46.48525,10.36584],[46.48595,10.36630],[46.48793,10.36476],[46.48883,10.36467],[46.49076,10.36401],[46.49195,10.36230],[46.49251,10.36229],[46.49316,10.36125],[46.49324,10.36033],[46.49599,10.35802],[46.49651,10.35812],[46.49690,10.35777],[46.49905,10.35765],[46.49973,10.35695],[46.50045,10.35666],[46.50166,10.35679],[46.50255,10.35633],[46.50301,10.35643],[46.50471,10.35988],[46.50562,10.36117],[46.50555,10.36130],[46.50458,10.36014],[46.50451,10.36029],[46.50538,10.36174],[46.50635,10.36446],[46.50772,10.36681],[46.50762,10.36691],[46.50668,10.36573],[46.50759,10.36758],[46.50759,10.36868],[46.50796,10.36978],[46.50783,10.37077],[46.50888,10.37137],[46.50959,10.37239],[46.50972,10.37396],[46.51037,10.37549],[46.51050,10.37658],[46.50995,10.37549],[46.51025,10.37666],[46.50958,10.37554],[46.51000,10.37665],[46.51007,10.37837],[46.50962,10.37951],[46.50945,10.38204],[46.50917,10.38328],[46.50920,10.38697],[46.50959,10.38919],[46.50933,10.39103],[46.51044,10.39431],[46.51069,10.39613],[46.51133,10.39687],[46.51181,10.39808],[46.51236,10.39871],[46.51331,10.40118],[46.51445,10.40266],[46.51441,10.40282],[46.51414,10.40277],[46.51325,10.40198],[46.51416,10.40363],[46.51468,10.40400],[46.51463,10.40413],[46.51408,10.40387],[46.51361,10.40323],[46.51355,10.40342],[46.51488,10.40556],[46.51582,10.40566],[46.51519,10.40628],[46.51630,10.40599],[46.51498,10.40722],[46.51630,10.40693],[46.51695,10.40640],[46.51647,10.40725],[46.51550,10.40795],[46.51549,10.40813],[46.51680,10.40774],[46.51764,10.40646],[46.51706,10.40824],[46.51580,10.40923],[46.51731,10.40872],[46.51772,10.40800],[46.51901,10.40702],[46.51871,10.40853],[46.51779,10.40912],[46.51780,10.40930],[46.51980,10.40863],[46.52218,10.40921],[46.52265,10.40962],[46.52368,10.40879],[46.52438,10.40908],[46.52657,10.40848],[46.52695,10.40856],[46.52793,10.40945],[46.52873,10.40959],[46.52995,10.40920],[46.53203,10.40946],[46.53398,10.41063],[46.53468,10.41177],[46.53596,10.41188],[46.53680,10.41283],[46.53791,10.41311],[46.54021,10.41690],[46.54104,10.42612],[46.54082,10.42835],[46.54023,10.43010],[46.53982,10.43081],[46.53834,10.43227],[46.53845,10.43239],[46.53973,10.43178],[46.53981,10.43190],[46.53802,10.43396],[46.53899,10.43372],[46.53990,10.43304],[46.54081,10.43273],[46.54152,10.43315],[46.54266,10.43323],[46.54332,10.43427],[46.54410,10.43426],[46.54464,10.43478],[46.54699,10.43526],[46.54827,10.43502],[46.54732,10.43594],[46.54612,10.43631],[46.54558,10.43676],[46.54563,10.43693],[46.54646,10.43671],[46.54736,10.43694],[46.54931,10.43696],[46.55051,10.43648],[46.55100,10.43590],[46.55130,10.43584],[46.55053,10.43709],[46.54993,10.43768],[46.54998,10.43788],[46.55165,10.43695],[46.55202,10.43642],[46.55277,10.43589],[46.55289,10.43606],[46.55246,10.43662],[46.55234,10.43743],[46.55355,10.43590],[46.55421,10.43554],[46.55507,10.43456],[46.55584,10.43447],[46.55638,10.43411],[46.55726,10.43402],[46.55819,10.43330],[46.55708,10.43502],[46.55663,10.43630],[46.55822,10.43474],[46.55923,10.43494],[46.56053,10.43474],[46.56190,10.43523],[46.56399,10.43646],[46.56474,10.43723],[46.56628,10.43815],[46.56636,10.43800],[46.56587,10.43697],[46.56682,10.43777],[46.56661,10.43680],[46.56766,10.43778],[46.56787,10.43824],[46.56793,10.43692],[46.56924,10.43834],[46.57022,10.43783],[46.57056,10.43698],[46.57313,10.43725],[46.57451,10.43785],[46.57586,10.43782],[46.57751,10.43848],[46.57805,10.43832],[46.57758,10.43875],[46.57609,10.43901],[46.57698,10.43929],[46.57736,10.44021],[46.57865,10.44067],[46.57960,10.44023],[46.58013,10.43902],[46.58148,10.43842],[46.58278,10.43708],[46.58359,10.43676],[46.58427,10.43530],[46.58472,10.43484],[46.58526,10.43463],[46.58603,10.43374],[46.58716,10.43305],[46.58791,10.43313],[46.58825,10.43261],[46.58939,10.43184],[46.58936,10.43160],[46.58892,10.43195],[46.58850,10.43193],[46.58891,10.43178],[46.58923,10.43128],[46.59022,10.43137],[46.59094,10.43109],[46.59091,10.43096],[46.59019,10.43113],[46.58978,10.43106],[46.58978,10.43090],[46.59016,10.43099],[46.59068,10.43071],[46.59171,10.43053],[46.59256,10.43097],[46.59285,10.43078],[46.59377,10.43091],[46.59284,10.43043],[46.59407,10.43044],[46.59408,10.43029],[46.59347,10.43022],[46.59280,10.42977],[46.59347,10.42992],[46.59407,10.42940],[46.59440,10.42938],[46.59404,10.42907],[46.59362,10.42923],[46.59418,10.42821],[46.59470,10.42886],[46.59519,10.43057],[46.59573,10.43147],[46.59627,10.43196],[46.59634,10.43184],[46.59592,10.43133],[46.59561,10.43038],[46.59573,10.43021],[46.59607,10.43113],[46.59664,10.43159],[46.59676,10.43231],[46.59679,10.43147],[46.59630,10.43062],[46.59697,10.43123],[46.59737,10.43255],[46.59832,10.43261],[46.59885,10.43327],[46.59885,10.43232],[46.59813,10.43041],[46.59974,10.43073],[46.59986,10.43061],[46.59800,10.42616],[46.60146,10.42538],[46.60198,10.42492],[46.60294,10.42571],[46.60402,10.42737],[46.60620,10.43170],[46.60903,10.43409],[46.61089,10.43667],[46.61346,10.44102],[46.61510,10.44103],[46.61584,10.44242],[46.61723,10.44400],[46.61918,10.44543],[46.62142,10.44582],[46.62315,10.44567],[46.62346,10.44635],[46.62417,10.44692],[46.62638,10.44722],[46.62758,10.44786],[46.62891,10.44930],[46.62953,10.44958],[46.63039,10.45226],[46.63188,10.45484],[46.63742,10.46076],[46.64051,10.46251],[46.64139,10.46276],[46.64246,10.46268],[46.64526,10.46377],[46.64744,10.46528],[46.64865,10.46703],[46.64880,10.46835],[46.64950,10.47063],[46.65014,10.47186],[46.65108,10.47271],[46.65287,10.47350],[46.65360,10.47502],[46.65449,10.47581],[46.65374,10.48369],[46.65503,10.48942],[46.65577,10.49125],[46.65851,10.49494],[46.66310,10.49889],[46.66468,10.50213],[46.66521,10.50276],[46.66588,10.50311],[46.66575,10.50354],[46.66509,10.50354],[46.66487,10.50371],[46.66477,10.50459],[46.66643,10.50656],[46.66688,10.50798],[46.66817,10.51071],[46.66815,10.51573],[46.66761,10.52287],[46.66774,10.52451],[46.66752,10.52576],[46.66773,10.52754],[46.66845,10.53057],[46.66886,10.53406],[46.66793,10.53886],[46.66876,10.54073],[46.66890,10.54205],[46.66933,10.54356],[46.66993,10.54962],[46.66981,10.55109],[46.66565,10.55694],[46.66497,10.55766],[46.66121,10.56031],[46.65877,10.56354],[46.65753,10.56453],[46.65423,10.56611],[46.64790,10.56757],[46.64047,10.57044],[46.63656,10.57319],[46.63634,10.57311],[46.63629,10.57340],[46.62328,10.58321],[46.61958,10.58520],[46.61766,10.58815],[46.61732,10.58935],[46.61704,10.59125],[46.61714,10.59162],[46.61651,10.59002],[46.61468,10.58714],[46.61411,10.58451],[46.61358,10.58317],[46.61119,10.57935],[46.61020,10.57444],[46.60643,10.56676],[46.60603,10.56425],[46.60476,10.56108],[46.60376,10.55994],[46.60354,10.55867],[46.60294,10.55840],[46.60244,10.55756],[46.60182,10.55703],[46.60112,10.55683],[46.60035,10.55605],[46.59758,10.55488],[46.59733,10.55454],[46.59715,10.55342],[46.59652,10.55325],[46.59606,10.55336],[46.59500,10.55275],[46.59383,10.55130],[46.59257,10.55075],[46.59225,10.54969],[46.59163,10.54919],[46.58976,10.54878],[46.58878,10.54825],[46.58813,10.54765],[46.58751,10.54756],[46.58673,10.54778],[46.58462,10.54698],[46.58249,10.54454],[46.58033,10.54313],[46.57747,10.54188],[46.57581,10.54038],[46.57501,10.53911],[46.57297,10.53394],[46.57133,10.53076],[46.57053,10.52845],[46.56977,10.52694],[46.56950,10.52500],[46.56913,10.52420],[46.56688,10.52242],[46.56691,10.52226],[46.56743,10.52271],[46.56751,10.52260],[46.56604,10.52114],[46.56557,10.52096],[46.56491,10.52009],[46.56340,10.51916],[46.56292,10.51853],[46.56226,10.51826],[46.56095,10.51562],[46.56041,10.51533],[46.55886,10.51525],[46.55781,10.51476],[46.55652,10.51391],[46.55566,10.51298],[46.55458,10.51250],[46.55383,10.51167],[46.55274,10.51099],[46.55139,10.51061],[46.55062,10.51012],[46.55065,10.50982],[46.55192,10.50959],[46.55092,10.50905],[46.54991,10.50698],[46.54949,10.50652],[46.54797,10.50549],[46.54620,10.50584],[46.54447,10.50562],[46.54315,10.50477],[46.54441,10.50513],[46.54511,10.50486],[46.54447,10.50488],[46.54315,10.50404],[46.54235,10.50307],[46.54180,10.50306],[46.54122,10.50355],[46.54030,10.50301],[46.54037,10.50287],[46.54102,10.50323],[46.54123,10.50317],[46.54140,10.50203],[46.54098,10.50292],[46.54138,10.50110],[46.54086,10.50234],[46.54097,10.50111],[46.54071,10.50208],[46.54070,10.50103],[46.54141,10.49959],[46.54026,10.50075],[46.53883,10.50134],[46.53736,10.50145],[46.53732,10.50129],[46.53864,10.50087],[46.53929,10.50004],[46.53853,10.50051],[46.53736,10.50046],[46.53594,10.49865],[46.53561,10.49731],[46.53485,10.49614],[46.53371,10.49373],[46.53322,10.49196],[46.53385,10.49286],[46.53355,10.49185],[46.53263,10.49007],[46.53193,10.48771],[46.53202,10.48758],[46.53381,10.49048],[46.53285,10.48769],[46.53234,10.48555],[46.53334,10.48766],[46.53391,10.48834],[46.53290,10.48520],[46.53380,10.48677],[46.53327,10.48513],[46.53330,10.48439],[46.53272,10.48224],[46.53326,10.48330],[46.53303,10.48124],[46.53365,10.48317],[46.53335,10.48063],[46.53328,10.47776],[46.53291,10.47626],[46.53367,10.47789],[46.53345,10.47631],[46.53398,10.47781],[46.53360,10.47459],[46.53315,10.47341],[46.53266,10.47108],[46.53347,10.47297],[46.53295,10.47051],[46.53286,10.46622],[46.53192,10.46358],[46.53267,10.46467],[46.53170,10.46185],[46.53099,10.46098],[46.53194,10.46162],[46.53310,10.46392],[46.53215,10.46071],[46.53036,10.45932],[46.53227,10.45995],[46.53320,10.46125],[46.53235,10.45931],[46.53080,10.45842],[46.52991,10.45725],[46.53100,10.45802],[46.53171,10.45824],[46.53094,10.45773],[46.53004,10.45652],[46.53045,10.45662],[46.53119,10.45751],[46.53062,10.45642],[46.52995,10.45571],[46.52941,10.45569],[46.53002,10.45545],[46.52943,10.45536],[46.53013,10.45524],[46.53116,10.45580],[46.53155,10.45644],[46.53127,10.45564],[46.53035,10.45472],[46.52920,10.45433],[46.52866,10.45353],[46.52862,10.45310],[46.53004,10.45126],[46.52959,10.45117],[46.52924,10.44909],[46.52947,10.44888],[46.53063,10.44866],[46.53026,10.44763],[46.53041,10.44724],[46.53104,10.44799],[46.53214,10.44824],[46.53231,10.44693],[46.53321,10.44507],[46.53315,10.44465],[46.53173,10.44493],[46.53152,10.44475],[46.53188,10.44380],[46.53300,10.44310],[46.53340,10.44234],[46.53334,10.44184],[46.53225,10.43965],[46.53368,10.43882],[46.53617,10.43835],[46.53590,10.43772],[46.53655,10.43695],[46.53719,10.43655],[46.53770,10.43531],[46.53925,10.43424],[46.53972,10.43333],[46.53967,10.43320],[46.53899,10.43372],[46.53806,10.43397],[46.53799,10.43383],[46.53981,10.43190],[46.53973,10.43178],[46.53845,10.43239],[46.53834,10.43227],[46.53999,10.43058],[46.54082,10.42835],[46.54104,10.42612],[46.54021,10.41690],[46.53791,10.41311],[46.53680,10.41283],[46.53596,10.41188],[46.53468,10.41177],[46.53398,10.41063],[46.53203,10.40946],[46.52995,10.40920],[46.52873,10.40959],[46.52793,10.40945],[46.52695,10.40856],[46.52657,10.40848],[46.52438,10.40908],[46.52368,10.40879],[46.52265,10.40962],[46.52218,10.40921],[46.51980,10.40863],[46.51785,10.40931],[46.51779,10.40912],[46.51871,10.40853],[46.51901,10.40702],[46.51772,10.40800],[46.51731,10.40872],[46.51580,10.40923],[46.51706,10.40824],[46.51764,10.40646],[46.51680,10.40774],[46.51549,10.40813],[46.51550,10.40795],[46.51647,10.40725],[46.51695,10.40640],[46.51630,10.40693],[46.51498,10.40722],[46.51630,10.40599],[46.51519,10.40628],[46.51582,10.40566],[46.51488,10.40556],[46.51355,10.40342],[46.51361,10.40323],[46.51408,10.40387],[46.51463,10.40413],[46.51468,10.40400],[46.51416,10.40363],[46.51325,10.40198],[46.51414,10.40277],[46.51441,10.40282],[46.51445,10.40266],[46.51331,10.40118],[46.51236,10.39871],[46.51181,10.39808],[46.51133,10.39687],[46.51069,10.39613],[46.51044,10.39431],[46.50933,10.39103],[46.50959,10.38919],[46.50920,10.38697],[46.50917,10.38328],[46.50945,10.38204],[46.50962,10.37951],[46.51007,10.37837],[46.51000,10.37665],[46.50958,10.37554],[46.51025,10.37666],[46.50995,10.37549],[46.51050,10.37658],[46.51037,10.37549],[46.50972,10.37396],[46.50959,10.37239],[46.50888,10.37137],[46.50783,10.37077],[46.50796,10.36978],[46.50759,10.36868],[46.50759,10.36758],[46.50668,10.36573],[46.50762,10.36691],[46.50772,10.36681],[46.50635,10.36446],[46.50538,10.36174],[46.50451,10.36029],[46.50458,10.36014],[46.50555,10.36130],[46.50562,10.36117],[46.50471,10.35988],[46.50320,10.35660],[46.50255,10.35633],[46.50176,10.35678],[46.50045,10.35666],[46.49973,10.35695],[46.49905,10.35765],[46.49690,10.35777],[46.49651,10.35812],[46.49599,10.35802],[46.49324,10.36033],[46.49316,10.36125],[46.49251,10.36229],[46.49195,10.36230],[46.49076,10.36401],[46.48883,10.36467],[46.48793,10.36476],[46.48595,10.36630],[46.48525,10.36584],[46.48414,10.36565],[46.48371,10.36645],[46.48269,10.36712],[46.48222,10.36797],[46.48173,10.36835],[46.47987,10.36841],[46.47825,10.36956],[46.47798,10.36946],[46.47768,10.36896],[46.47632,10.36855],[46.47641,10.36833],[46.47763,10.36761],[46.47760,10.36735],[46.47442,10.36690],[46.47375,10.36712],[46.47265,10.36811],[46.47240,10.36813],[46.47233,10.36786],[46.47294,10.36621],[46.47276,10.36586],[46.47131,10.36664],[46.46969,10.36894],[46.46932,10.37099],[46.46869,10.37172],[46.46813,10.37185],[46.46701,10.37120],[46.46610,10.37030],[46.46438,10.36679],[46.46634,10.37058],[46.46804,10.37183],[46.46854,10.37179],[46.46891,10.37150]];
+
+      const routes = [
+        { id: 'map-route-d2', maxZoom: 14,
+          coords: SELLA_RONDA_COORDS,
+          waypoints: [
+            { name: 'P. Campolongo', lat: 46.51405, lon: 11.87234, ele: 1875 },
+            { name: 'P. Pordoi',     lat: 46.48747, lon: 11.81282, ele: 2239 },
+            { name: 'P. Sella',      lat: 46.50803, lon: 11.76733, ele: 2244 },
+            { name: 'P. Gardena',    lat: 46.54984, lon: 11.80880, ele: 2121 }
+          ] },
+        { id: 'map-route-d3', maxZoom: 13,
+          coords: GIAU_LOOP_COORDS,
+          waypoints: [
+            { name: 'P. Campolongo', lat: 46.51405, lon: 11.87234, ele: 1875 },
+            { name: 'P. Giau',       lat: 46.4843,  lon: 12.0571,  ele: 2236 },
+            { name: 'P. Falzarego',  lat: 46.519,   lon: 12.008,   ele: 2105 },
+            { name: 'P. Valparola',  lat: 46.524,   lon: 11.999,   ele: 2192 }
+          ] },
+        { id: 'map-route-d4', maxZoom: 13,
+          coords: CANCANO_COORDS,
+          waypoints: [
+            { name: 'Lago di Cancano', lat: 46.51441, lon: 10.31670, ele: 1888 }
+          ] },
+        { id: 'map-route-d5', maxZoom: 12,
+          coords: STELVIO_LOOP_COORDS,
+          waypoints: [
+            { name: 'Umbrail',         lat: 46.5446, lon: 10.4480, ele: 2501 },
+            { name: 'Cima Stelvio',    lat: 46.5283, lon: 10.4543, ele: 2758 }
+          ] },
+        { id: 'map-route-d6', maxZoom: 12,
+          coords: GAVIA_MORTIROLO_COORDS,
+          waypoints: [
+            { name: 'P. Gavia',     lat: 46.34374, lon: 10.48581, ele: 2621 },
+            { name: 'P. Mortirolo', lat: 46.24814, lon: 10.29923, ele: 1852 }
+          ] }
+      ];
+
+      routes.forEach(r => {
+        const el = document.getElementById(r.id);
+        if(!el || el.dataset.mapInit === '1') return;
+        const map = L.map(el, { scrollWheelZoom: false, zoomControl: true, attributionControl: true });
+
+        // Tiles oscuros estilo Strava (CartoDB Dark Matter)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          maxZoom: 19,
+          subdomains: 'abcd',
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> · &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        }).addTo(map);
+
+        // Halo + traza naranja (estilo heatmap Strava)
+        L.polyline(r.coords, { color: '#ffffff', weight: 9, opacity: 0.18, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+        const pl = L.polyline(r.coords, { color: STRAVA, weight: 5, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+
+        // Marcadores inicio/fin tipo Strava
+        const start = r.coords[0];
+        const end = r.coords[r.coords.length - 1];
+        const dot = (color) => L.divIcon({
+          className: 'route-dot',
+          html: `<span style="display:block;width:14px;height:14px;border-radius:50%;background:${color};box-shadow:0 0 0 3px #0a0d10,0 0 0 4px ${color};"></span>`,
+          iconSize: [14,14], iconAnchor: [7,7]
+        });
+        L.marker(start, { icon: dot('#22c55e') }).addTo(map).bindTooltip('Inicio · Arabba', { direction: 'top', offset: [0,-8] });
+        L.marker(end, { icon: dot(STRAVA) }).addTo(map).bindTooltip('Final', { direction: 'top', offset: [0,-8] });
+
+        // Waypoints (puertos) con tooltip permanente
+        if (Array.isArray(r.waypoints)) {
+          const passDot = L.divIcon({
+            className: 'pass-marker',
+            html: '<span style="display:block;width:10px;height:10px;border-radius:50%;background:#fbbf24;box-shadow:0 0 0 2px #0a0d10,0 0 0 3px #fbbf24;"></span>',
+            iconSize: [10,10], iconAnchor: [5,5]
+          });
+          r.waypoints.forEach(wp => {
+            const label = wp.ele ? `${wp.name} · ${wp.ele} m` : wp.name;
+            L.marker([wp.lat, wp.lon], { icon: passDot })
+              .addTo(map)
+              .bindTooltip(label, { permanent: true, direction: 'top', offset: [0,-6], className: 'pass-tooltip' });
+          });
+        }
+
+        map.fitBounds(pl.getBounds(), { padding: [32, 32], maxZoom: r.maxZoom || 13 });
+        window.__routeMaps[r.id] = map;
+        el.dataset.mapInit = '1';
+      });
+
+      const refreshOnOpen = (d) => {
+        d.addEventListener('toggle', () => {
+          if(!d.open) return;
+          d.querySelectorAll('.route-map').forEach(mid => {
+            const map = window.__routeMaps[mid.id];
+            if(map) setTimeout(() => map.invalidateSize(), 160);
+          });
+        });
+      };
+      document.querySelectorAll('details.route-detail, details.day, details.stay-block').forEach(refreshOnOpen);
+    }
+    document.addEventListener('DOMContentLoaded', initRouteMaps);
+  </script>
+</body>
+</html>
