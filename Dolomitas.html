@@ -714,7 +714,7 @@
       padding: 18px;
     }
 
-    #top, #itinerario, #traslado-ida-inicial, #stay-arabba, #dia-d2, #dia-d3, #dia-d4, #dia-d5, #dia-d6, #traslado-arabba-bormio, #stay-bormio, #traslado-vuelta-casa, #resumen, #cotas-altitud, #hoteles-section, #checklist-section, #presupuesto{
+    #top, #itinerario, #traslado-ida-inicial, #stay-arabba, #dia-d2, #dia-d3, #dia-d4, #dia-d5, #dia-d6, #traslado-arabba-bormio, #stay-bormio, #traslado-vuelta-casa, #resumen, #plan-pedaleo, #cotas-altitud, #hoteles-section, #checklist-section, #presupuesto{
       scroll-margin-top: 110px;
     }
 
@@ -1304,6 +1304,7 @@
       <div class="toc-section">
         <div class="toc-section-title">Referencia</div>
         <a href="#resumen" class="toc-link"><span>Resumen rápido</span></a>
+        <a href="#plan-pedaleo" class="toc-link"><span>Plan de pedaleo</span></a>
         <a href="#cotas-altitud" class="toc-link"><span>Cotas máximas</span></a>
         <a href="#hoteles-section" class="toc-link"><span>Hoteles sugeridos</span></a>
         <a href="#checklist-section" class="toc-link"><span>Checklist express</span></a>
@@ -1368,11 +1369,12 @@
       <div class="glance-kpis">
         <div class="glance-kpi"><div class="lbl">Duración</div><div class="val">7 días</div><div class="hint">6 noches en hotel</div></div>
         <div class="glance-kpi"><div class="lbl">Días en bici</div><div class="val">5</div><div class="hint">D2–D6</div></div>
-        <div class="glance-kpi accent"><div class="lbl">Km bici (aprox.)</div><div class="val">~280 km</div><div class="hint">según opción D6</div></div>
-        <div class="glance-kpi accent"><div class="lbl">Desnivel +</div><div class="val">~7.300 m</div><div class="hint">acumulado total</div></div>
+        <div class="glance-kpi accent"><div class="lbl">Km bici totales</div><div class="val">385 km</div><div class="hint">suma de los 5 GPX</div></div>
+        <div class="glance-kpi accent"><div class="lbl">Desnivel + total</div><div class="val">11.604 m</div><div class="hint">acumulado real</div></div>
+        <div class="glance-kpi"><div class="lbl">Cota máxima</div><div class="val">2.760 m</div><div class="hint">Stelvio (D5)</div></div>
+        <div class="glance-kpi"><div class="lbl">Tiempo en bici</div><div class="val">~25 h</div><div class="hint">≈ 5 h/día medio</div></div>
         <div class="glance-kpi"><div class="lbl">Bases</div><div class="val">2</div><div class="hint">Arabba · Bormio</div></div>
-        <div class="glance-kpi"><div class="lbl">Puertos top</div><div class="val">5+</div><div class="hint">Pordoi · Giau · Stelvio · Gavia · Mortirolo</div></div>
-        <div class="glance-kpi"><div class="lbl">Coche I+V</div><div class="val">~3.600 km</div><div class="hint">Gijón ⇄ Dolomitas</div></div>
+        <div class="glance-kpi"><div class="lbl">Puertos +2.000 m</div><div class="val">8</div><div class="hint">Pordoi · Sella · Gardena · Giau · Falzarego · Valparola · Stelvio · Gavia</div></div>
       </div>
     </section>
   </div>
@@ -1861,22 +1863,65 @@
           <div class="bd">
             <div class="kpis">
               <div class="kpi">
-                <div class="label">Desnivel (sin Mortirolo)</div>
-                <div class="val">≈ 8.700 m</div>
-                <div class="hint">4 días de puertos</div>
+                <div class="label">Desnivel + total</div>
+                <div class="val">11.604 m</div>
+                <div class="hint">5 días con GPX</div>
+              </div>
+              <div class="kpi">
+                <div class="label">Km totales</div>
+                <div class="val">385 km</div>
+                <div class="hint">~77 km/día medio</div>
               </div>
               <div class="kpi">
                 <div class="label">Cota máxima</div>
-                <div class="val">2.758 m</div>
-                <div class="hint">Stelvio</div>
-              </div>
-              <div class="kpi">
-                <div class="label">Ventana recomendada</div>
-                <div class="val">5–11 Jul</div>
-                <div class="hint">más estable</div>
+                <div class="val">2.760 m</div>
+                <div class="hint">Stelvio (D5)</div>
               </div>
             </div>
-            <div class="notice"><b>Meteo típica:</b> mañanas estables; tormentas más probables 14:00–18:00. Diferencia térmica posible: <b>25–28°C</b> en valle y <b>5–10°C</b> en la cima.</div>
+            <div class="notice"><b>Meteo típica:</b> mañanas estables; tormentas más probables 14:00–18:00. Diferencia térmica posible: <b>25–28 °C</b> en valle y <b>5–10 °C</b> en la cima.</div>
+          </div>
+        </div>
+
+        <div class="card" id="plan-pedaleo">
+          <div class="hd">
+            <h2>Plan de pedaleo</h2>
+            <div class="muted">ritmo, cumbre y tiempo</div>
+          </div>
+          <div class="bd">
+            <table>
+              <tr>
+                <th>Día</th>
+                <th>Cumbre · hora</th>
+                <th>Vel.</th>
+                <th>Tiempo</th>
+              </tr>
+              <tr><td><b>D2</b></td><td>Pordoi · ~09:15</td><td class="mono">17 km/h</td><td class="mono">~3 h 00</td></tr>
+              <tr><td><b>D3</b></td><td>Giau · ~10:10</td><td class="mono">16 km/h</td><td class="mono">~5 h 15</td></tr>
+              <tr><td><b>D4</b></td><td>Cancano · ~11:30</td><td class="mono">15 km/h</td><td class="mono">~3 h 00</td></tr>
+              <tr><td><b>D5</b></td><td>Stelvio · ~12:00</td><td class="mono">15 km/h</td><td class="mono">~6 h 30</td></tr>
+              <tr><td><b>D6</b></td><td>Mortirolo · ~11:20</td><td class="mono">15 km/h</td><td class="mono">~7 h 00</td></tr>
+              <tr><td><b>Total</b></td><td class="muted">5 días · 8 puertos</td><td class="mono"><b>15,5</b></td><td class="mono"><b>~24 h 45</b></td></tr>
+            </table>
+            <div class="notice">
+              <b>Zonas de potencia (% FTP):</b> base en <b>Z2 (60–75 %)</b> en valle y descensos; <b>Z3 tempo (75–90 %)</b> en los puertos largos, sobre todo los últimos 20–30 min. <b>Evitar Z4</b> — es un viaje, no una contrarreloj.
+              <br><br>
+              <b>Vatios estimados</b> (rango amplio FTP 200–300 W):
+            </div>
+            <table style="margin-top:6px;">
+              <tr>
+                <th>FTP</th>
+                <th>Z2 (60–75 %)</th>
+                <th>Z3 (75–90 %)</th>
+              </tr>
+              <tr><td class="mono"><b>200 W</b></td><td class="mono">120–150 W</td><td class="mono">150–180 W</td></tr>
+              <tr><td class="mono"><b>250 W</b></td><td class="mono">150–185 W</td><td class="mono">185–225 W</td></tr>
+              <tr><td class="mono"><b>300 W</b></td><td class="mono">180–225 W</td><td class="mono">225–270 W</td></tr>
+            </table>
+            <div class="notice" style="margin-top:10px;">
+              <b>Cumbres secundarias</b> que también se cruzan: <b>D5</b> sube primero <b>Umbrail</b> (2.501 m) hacia las 08:20; <b>D6</b> hace primero <b>Gavia</b> (2.621 m) hacia las 08:10 antes de bajar a Mazzo y atacar el Mortirolo.
+              <br><br>
+              <b>Regla de cumbre:</b> grandes puertos siempre <b>antes de las 13:00</b> y bajada hecha antes de las 14:00 — las tormentas alpinas pegan entre las 14:00 y las 18:00. Por eso D5 sale a las 7:00 y D6 a las 6:30.
+            </div>
           </div>
         </div>
 
@@ -1887,15 +1932,21 @@
           </div>
           <div class="bd">
             <table>
-              <tr><th>Paso / zona</th><th>Altitud</th></tr>
-              <tr><td>Passo dello Stelvio (cima)</td><td><b>2.758 m</b></td></tr>
-              <tr><td>Passo di Gavia</td><td>2.621 m</td></tr>
-              <tr><td>Umbrail Pass</td><td>2.501 m</td></tr>
-              <tr><td>Passo Pordoi (Sella Ronda)</td><td>2.239 m</td></tr>
-              <tr><td>Passo Giau</td><td>2.236 m</td></tr>
-              <tr><td>Passo del Mortirolo</td><td>1.852 m</td></tr>
-              <tr><td class="muted">Base Arabba (hotel)</td><td class="muted">~1.600 m</td></tr>
-              <tr><td class="muted">Base Bormio (hotel)</td><td class="muted">~1.225 m</td></tr>
+              <tr><th>Paso / zona</th><th>Altitud</th><th>Día</th></tr>
+              <tr><td>Passo dello Stelvio (cima)</td><td><b>2.758 m</b></td><td class="mono">D5</td></tr>
+              <tr><td>Passo di Gavia</td><td>2.621 m</td><td class="mono">D6</td></tr>
+              <tr><td>Umbrail Pass</td><td>2.501 m</td><td class="mono">D5</td></tr>
+              <tr><td>Passo Sella</td><td>2.244 m</td><td class="mono">D2</td></tr>
+              <tr><td>Passo Pordoi</td><td>2.239 m</td><td class="mono">D2</td></tr>
+              <tr><td>Passo Giau</td><td>2.236 m</td><td class="mono">D3</td></tr>
+              <tr><td>Passo Valparola</td><td>2.192 m</td><td class="mono">D3</td></tr>
+              <tr><td>Passo Gardena</td><td>2.121 m</td><td class="mono">D2</td></tr>
+              <tr><td>Passo Falzarego</td><td>2.105 m</td><td class="mono">D3</td></tr>
+              <tr><td>Lago di Cancano</td><td>1.888 m</td><td class="mono">D4</td></tr>
+              <tr><td>Passo Campolongo</td><td>1.875 m</td><td class="mono">D2 · D3</td></tr>
+              <tr><td>Passo del Mortirolo</td><td>1.852 m</td><td class="mono">D6</td></tr>
+              <tr><td class="muted">Base Arabba (hotel)</td><td class="muted">~1.600 m</td><td class="mono muted">—</td></tr>
+              <tr><td class="muted">Base Bormio (hotel)</td><td class="muted">~1.225 m</td><td class="mono muted">—</td></tr>
             </table>
           </div>
         </div>
